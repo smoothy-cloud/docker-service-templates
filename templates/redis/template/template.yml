@@ -1,0 +1,73 @@
+api: v1
+
+meta:
+  icon: redis
+  name: Redis
+  baseline: An open-source key-value datastore.
+  description: >
+    Redis is an open-source key-value datastore.
+  categories:
+    - database
+
+form:
+  - title: General
+    questions:
+      - variable: redis_version
+        label: Version
+        required: true
+        immutable: true
+        type: select
+        options:
+          - value: '5.0'
+            label: '5.0'
+          - value: '6.0'
+            label: '6.0'
+      - variable: redis_password
+        label: Password
+        hint: >
+          Smoothy generates a random 64 character long string as password. However, you are free to
+          change this and choose your own password.
+        required: true
+        immutable: true
+        type: string
+        default: "{{ random_string(64) }}"
+  - title: Resources
+    questions:
+      - variable: memory
+        label: Memory
+        hint: >
+          The amount of memory allocated to the Redis database.
+        type: binary_number
+        minimum: 1024
+        default: 2048
+      - variable: cpus
+        label: CPU
+        hint: >
+          The number of CPU millicores allocated to the Redis database.
+        type: number
+        default: 1000
+
+deployment:
+  - resource: volume
+    name: redis_data
+  - resource: container
+    name: redis
+    image: bitnami/redis:{{ variable.redis_version }}
+    volume_mounts:
+      - volume: "{* volume.redis_data *}"
+        mount_path: /bitnami/redis/data
+    environment:
+      - key: REDIS_PASSWORD
+        value: "{{ variable.redis_password }}"
+    memory: "{{ variable.memory }}"
+    cpus: "{{ variable.cpus }}"
+  - resource: entrypoint
+    name: redis
+    title: Redis database
+    container: "{* container.redis *}"
+    port: 6379
+
+interface:
+  logs:
+    - title: Redis logs
+      container: "{* container.redis *}"
