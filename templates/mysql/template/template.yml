@@ -1,0 +1,81 @@
+api: v1
+
+meta:
+  icon: mysql
+  name: MySQL
+  baseline: An open-source relational database management system.
+  description: >
+    MySQL is an open-source relational database management system.
+  categories:
+    - database
+
+form:
+  - title: General
+    questions:
+      - variable: mysql_version
+        label: Version
+        required: true
+        immutable: true
+        type: select
+        options:
+          - label: "5.7"
+            value: "5.7"
+          - label: "8.0"
+            value: "8.0"
+      - variable: mysql_root_password
+        label: Root password
+        required: true
+        immutable: true
+        type: string
+        default: "{{ random_string(64) }}"
+  - title: Resources
+    questions:
+      - variable: memory
+        label: Memory
+        hint: >
+          The amount of memory allocated to the MySQL database. MySQL is a memory intensive application as
+          it caches table and index data in main memory. The more data that can be cached, the less disk I/O is
+          required and the faster your queries run.
+        type: binary_number
+        minimum: 1024
+        default: 2048
+      - variable: cpus
+        label: CPU
+        hint: >
+          The number of CPU millicores allocated to the MySQL database.
+        type: number
+        default: 1000
+
+deployment:
+  - resource: volume
+    name: mysql_data
+  - resource: container
+    name: mysql
+    image:
+      switch:
+        - case: "{{ variable.mysql_version == '5.7' }}"
+          value: mysql:5.7
+        - case: "{{ variable.mysql_version == '8.0' }}"
+          value: mysql:8.0
+    volume_mounts:
+      - volume: "{* volume.mysql_data *}"
+        mount_path: /var/lib/mysql
+    environment:
+      - key: MYSQL_ROOT_PASSWORD
+        value: "{{ variable.mysql_root_password }}"
+    command:
+      - part: --default_authentication_plugin=mysql_native_password
+        if: "{{ variable.mysql_version == '8.0' }}"
+      - part: --innodb-buffer-pool-size={{ (variable.memory * 0.8)|round * 1024 * 1024 }}
+    memory: "{{ variable.memory }}"
+    cpus:  "{{ variable.cpus }}"
+  - resource: entrypoint
+    name: mysql
+    title: MySQL database
+    container: "{* container.mysql *}"
+    port: 3306
+
+interface:
+  logs:
+    - title: MySQL logs
+      container: "{* container.mysql *}"
