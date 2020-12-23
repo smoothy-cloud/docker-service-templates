@@ -22,7 +22,7 @@ export class InstallTemplate
         this.directory = tmp.dirSync()
     }
 
-    async execute(template_path: string, template_version: string, variables: Variables): Promise<Service>
+    async execute(template_path: string, template_version: string, variables: Variables, initialization_time_in_seconds: number = 10): Promise<Service>
     {
         const service_id = uuidv4()
         const template = await (new ParseTemplate).execute(service_id, template_path, template_version, variables)
@@ -44,8 +44,7 @@ export class InstallTemplate
             throw error
         }
 
-        // wait for service to finish initializing
-        await new Promise(resolve => setTimeout(resolve, 1000 * 15))
+        await new Promise(resolve => setTimeout(resolve, 1000 * initialization_time_in_seconds))
 
         return service
     }
@@ -106,11 +105,15 @@ export class InstallTemplate
         const entrypoints: Entrypoint[] = []
         const entrypoint_host_port_mapping: Record<string, number> = {}
 
-        template.template.deployment.forEach((resource, i) => {
+        template.template.deployment.forEach(resource => {
 
             if(resource.resource !== 'entrypoint') return null
 
-            resource.host_port = 50000 + i
+            const min_port = 50000
+            const max_port = 65353
+            const random_port = Math.floor(Math.random() * (max_port - min_port) ) + min_port
+
+            resource.host_port = random_port
 
             entrypoints.push(resource)
 
