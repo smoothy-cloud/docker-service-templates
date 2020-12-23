@@ -1,7 +1,6 @@
-import { InstallTemplate, UninstallTemplate, ValidateTemplate, ParseTemplate } from 'tests'
+import { parseYamlFile, InstallTemplate, UninstallTemplate, ValidateTemplate, ParseTemplate } from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
-import fs from 'fs'
 import 'jest-extended'
 import mysql from 'mysql2'
 
@@ -41,9 +40,7 @@ test('the template can be parsed', async () => {
         'mysql_root_password': 'abc123',
     })
 
-    const expected_template = JSON.parse(
-        fs.readFileSync(__dirname+'/concerns/parsed_templates/1.0.0/template.json').toString()
-    )
+    const expected_template = parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 
     expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
     expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)

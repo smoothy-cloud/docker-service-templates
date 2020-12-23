@@ -1,0 +1,28 @@
+files: []
+template:
+  deployment:
+  - resource: container
+    name: mysql
+    image: mysql:8.0
+    volume_mounts:
+    - volume: service_volume_mysql_data
+      mount_path: "/var/lib/mysql"
+    environment:
+    - key: MYSQL_ROOT_PASSWORD
+      value: abc123
+    command:
+    - part: "--default_authentication_plugin=mysql_native_password"
+    - part: "--innodb-buffer-pool-size=1717567488"
+    memory: 2048
+    cpus: 1000
+  - resource: volume
+    name: mysql_data
+  - resource: entrypoint
+    name: mysql
+    title: MySQL database
+    container: service_container_mysql
+    port: 3306
+  interface:
+    logs:
+    - title: MySQL logs
+      container: service_container_mysql

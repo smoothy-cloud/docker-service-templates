@@ -1,0 +1,25 @@
+files: []
+template:
+  deployment:
+  - resource: container
+    name: redis
+    image: bitnami/redis:6.0
+    volume_mounts:
+    - volume: service_volume_redis_data
+      mount_path: "/bitnami/redis/data"
+    environment:
+    - key: REDIS_PASSWORD
+      value: abc123
+    memory: 2048
+    cpus: 1000
+  - resource: volume
+    name: redis_data
+  - resource: entrypoint
+    name: redis
+    title: Redis database
+    container: service_container_redis
+    port: 6379
+  interface:
+    logs:
+    - title: Redis logs
+      container: service_container_redis

@@ -5,7 +5,7 @@ import { Template, ImportedTemplate, Variables } from '@/types'
 
 export default class SmoothyApi {
 
-    host = "https://api.smoothy.cloud"
+    host = process.env.SMOOTHY_API_HOST ? process.env.SMOOTHY_API_HOST : "https://api.smoothy.cloud"
 
     async validateTemplate(form: FormData): Promise<void>
     {
