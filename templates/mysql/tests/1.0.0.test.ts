@@ -1,4 +1,4 @@
-import { parseYamlFile, InstallTemplate, UninstallTemplate, ValidateTemplate, ParseTemplate } from 'tests'
+import * as tests from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
 import 'jest-extended'
@@ -8,7 +8,7 @@ const template_path = path.resolve(__dirname, '../')
 
 test('the template is valid', async () => {
 
-    const error = await (new ValidateTemplate).execute(template_path)
+    const error = await tests.validateTemplate(template_path)
 
     expect(error).toBe(null)
 
@@ -19,7 +19,7 @@ test('the template cannot be parsed without mysql_version and mysql_root_passwor
     let thrown_error
 
     try {
-        await (new ParseTemplate).execute('service', template_path, '1.0.0', {})
+        await tests.parseTemplate('service', template_path, '1.0.0', {})
     } catch (error) {
         thrown_error = error
     }
@@ -35,12 +35,12 @@ test('the template cannot be parsed without mysql_version and mysql_root_passwor
 
 test('the template can be parsed', async () => {
 
-    const template = await (new ParseTemplate).execute('service', template_path, '1.0.0', {
+    const template = await tests.parseTemplate('service', template_path, '1.0.0', {
         'mysql_version': '8.0',
         'mysql_root_password': 'abc123',
     })
 
-    const expected_template = parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 
     expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
     expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
@@ -49,7 +49,7 @@ test('the template can be parsed', async () => {
 
 test("the mysql 5.7 service works correctly when installed", async () => {
 
-    const service = await (new InstallTemplate).execute(template_path, '1.0.0', {
+    const service = await tests.installTemplate(null, template_path, '1.0.0', {
         'mysql_version': '5.7',
         'mysql_root_password': 'secret',
     }, 30)
@@ -75,14 +75,14 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         })
 
     } finally {
-        await (new UninstallTemplate).execute(service)
+        await tests.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)
 
 test("the mysql 8.0 service works correctly when installed", async () => {
 
-    const service = await (new InstallTemplate).execute(template_path, '1.0.0', {
+    const service = await tests.installTemplate(null, template_path, '1.0.0', {
         'mysql_version': '8.0',
         'mysql_root_password': 'secret',
     }, 30)
@@ -108,7 +108,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         })
 
     } finally {
-        await (new UninstallTemplate).execute(service)
+        await tests.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)

@@ -1,4 +1,4 @@
-import { parseYamlFile, InstallTemplate, UninstallTemplate, ValidateTemplate, ParseTemplate } from 'tests'
+import * as tests from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
 import 'jest-extended'
@@ -9,7 +9,7 @@ const template_path = path.resolve(__dirname, '../')
 
 test('the template is valid', async () => {
 
-    const error = await (new ValidateTemplate).execute(template_path)
+    const error = await tests.validateTemplate(template_path)
 
     expect(error).toBe(null)
 
@@ -20,7 +20,7 @@ test('the template cannot be parsed without redis_version and redis_password', a
     let thrown_error
 
     try {
-        await (new ParseTemplate).execute('service', template_path, '1.0.0', {})
+        await tests.parseTemplate('service', template_path, '1.0.0', {})
     } catch (error) {
         thrown_error = error
     }
@@ -36,12 +36,12 @@ test('the template cannot be parsed without redis_version and redis_password', a
 
 test('the template can be parsed', async () => {
 
-    const template = await (new ParseTemplate).execute('service', template_path, '1.0.0', {
+    const template = await tests.parseTemplate('service', template_path, '1.0.0', {
         'redis_version': '6.0',
         'redis_password': 'abc123',
     })
 
-    const expected_template = parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 
     expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
     expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
@@ -50,7 +50,7 @@ test('the template can be parsed', async () => {
 
 test("the redis 5.0 service works correctly when installed", async () => {
 
-    const service = await (new InstallTemplate).execute(template_path, '1.0.0', {
+    const service = await tests.installTemplate(null, template_path, '1.0.0', {
         'redis_version': '5.0',
         'redis_password': 'secret',
     })
@@ -74,14 +74,14 @@ test("the redis 5.0 service works correctly when installed", async () => {
         client.quit()
 
     } finally {
-        await (new UninstallTemplate).execute(service)
+        await tests.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)
 
 test("the redis 6.0 service works correctly when installed", async () => {
 
-    const service = await (new InstallTemplate).execute(template_path, '1.0.0', {
+    const service = await tests.installTemplate(null, template_path, '1.0.0', {
         'redis_version': '6.0',
         'redis_password': 'secret',
     })
@@ -105,7 +105,7 @@ test("the redis 6.0 service works correctly when installed", async () => {
         client.quit()
 
     } finally {
-        await (new UninstallTemplate).execute(service)
+        await tests.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)

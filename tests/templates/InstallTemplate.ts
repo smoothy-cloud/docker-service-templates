@@ -8,7 +8,7 @@ import BuildImage from '@/docker/BuildImage'
 import CreateNetwork from '@/docker/CreateNetwork'
 import CreateVolume from '@/docker/CreateVolume'
 import RunContainer from '@/docker/RunContainer'
-import { Service, Entrypoint, ConfigFile, Template, Variables } from '@/types'
+import { Service, Volume, Image, Entrypoint, ConfigFile, Template, Variables } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
 tmp.setGracefulCleanup()
@@ -22,7 +22,10 @@ export class InstallTemplate
         this.directory = tmp.dirSync()
     }
 
-    async execute(template_path: string, template_version: string, variables: Variables, initialization_time_in_seconds: number = 10): Promise<Service>
+    async execute(
+        code_repository_path: string|null, template_path: string, template_version: string, variables: Variables, 
+        initialization_time_in_seconds: number = 10
+    ): Promise<Service>
     {
         const service_id = uuidv4()
         const template = await (new ParseTemplate).execute(service_id, template_path, template_version, variables)
@@ -35,7 +38,7 @@ export class InstallTemplate
 
         try {
             await new CreateNetwork().execute('smoothy')
-            await this.buildImages(service_id, template)
+            await this.buildImages(service_id, code_repository_path, template)
             await this.createVolumes(service_id, template)
             await this.createConfigFiles(service_id, template)
             service.entrypoints = await this.runContainers(service_id, template)
@@ -49,34 +52,40 @@ export class InstallTemplate
         return service
     }
 
-    async buildImages(service_id: string, template: Template): Promise<void>
+    async buildImages(service_id: string, code_repository_path: string|null, template: Template): Promise<void>
     {
-        const promises: Promise<void>[] = []
+        const images: Image[] = []
 
-        template.template.deployment.forEach(resource => {
+        for(const resource of template.template.deployment) {
+            if(resource.resource !== 'image') continue
+            images.push(resource)
+        }
 
-            if(resource.resource !== "image") return
+        if(images.length === 0) return
 
-            promises.push(new BuildImage().execute(service_id, template, resource))
+        if(code_repository_path === null) {
+            throw new Error("No code repository path provided.")
+        }
 
-        })
-
-        await Promise.all(promises)
+        for(const image of images) {
+            await new BuildImage().execute(service_id, code_repository_path, template, image)
+        }
     }
 
     async createVolumes(service_id: string, template: Template): Promise<void>
     {
-        const promises: Promise<void>[] = []
+        const volumes: Volume[] = []
 
-        template.template.deployment.forEach(resource => {
+        for(const resource of template.template.deployment) {
+            if(resource.resource !== 'volume') continue
+            volumes.push(resource)
+        }
 
-            if(resource.resource !== "volume") return
+        if(volumes.length === 0) return
 
-            promises.push(new CreateVolume().execute(service_id, resource))
-
-        })
-
-        await Promise.all(promises)
+        for(const volume of volumes) {
+            await new CreateVolume().execute(service_id, volume)
+        }
     }
 
     async createConfigFiles(service_id: string, template: Template): Promise<void>

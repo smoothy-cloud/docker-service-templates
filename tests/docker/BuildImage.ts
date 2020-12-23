@@ -22,13 +22,15 @@ class BuildImage
         this.docker = new Docker()
     }
 
-    async execute(application_id: string, template: Template, image: Image): Promise<void>
+    async execute(
+        application_id: string, code_repository_path: string, template: Template, image: Image
+    ): Promise<void>
     {
         const build_directory: Directory = tmp.dirSync()
 
         try {
 
-            await this.copyCodeRepositoryContentsToBuildFolder(image, build_directory)
+            await this.copyCodeRepositoryContentsToBuildFolder(code_repository_path, image, build_directory)
 
             this.copyImageFilesToBuildFolder(template.files, build_directory)
 
@@ -44,11 +46,13 @@ class BuildImage
     /*
      * Do not copy .git directory and respect .gitignore file.
      */
-    async copyCodeRepositoryContentsToBuildFolder(image: Image, build_directory: Directory): Promise<void>
+    async copyCodeRepositoryContentsToBuildFolder(
+        code_repository_path: string, image: Image, build_directory: Directory
+    ): Promise<void>
     {
-        const path_to_code_repository_contents = image.code_repository.replace(/[/]+$/, "")
+        code_repository_path = code_repository_path.replace(/[/]+$/, "")
 
-        await exec(`rsync -azP --delete --exclude='.git' --filter=":- .gitignore" ${path_to_code_repository_contents}/. ${build_directory.name}/code-repository/`)
+        await exec(`rsync -azP --delete --exclude='.git' --filter=":- .gitignore" ${code_repository_path}/. ${build_directory.name}/code-repository/`)
     }
 
     copyImageFilesToBuildFolder(files: TemplateFiles, build_directory: Directory): void
@@ -85,11 +89,10 @@ class BuildImage
 
             function onProgress(event: ProgressEvent) {
                 if (event.error) {
-                    console.log(event.error)
                     reject(`An error occurred during the build of the Dockerfile: ${event.error}`)
                 }
                 if(event.stream) {
-                    console.log(event.stream)
+                    // console.log(event.stream)
                 }
             }
 

@@ -29,3 +29,5 @@ export class ValidateTemplate
         return null
     }
 }
+
+export default ValidateTemplate
