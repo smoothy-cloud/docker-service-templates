@@ -1,0 +1,79 @@
+files:
+  Dockerfile: |-
+    FROM node:alpine as build-stage
+
+    RUN mkdir -p /app/src/
+    WORKDIR /app/src/
+
+    COPY code-repository/src/package*.json /app/src/
+    RUN npm install --silent
+
+    COPY code-repository/src/ /app/src/
+
+
+    RUN npm run build
+    RUN npm run optimize
+
+    FROM smoothy/nginx-1.18:1.0.0
+
+    COPY server.conf /etc/nginx/conf.d/server.conf
+    COPY --from=build-stage /app/src/dist /usr/share/nginx/html
+  server.conf: |-
+    server {
+        listen 8080;
+        listen [::]:8080 default ipv6only=on;
+        server_name _;
+
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        error_page 404 /404.html;
+        charset utf-8;
+
+        add_header X-Frame-Options "sameorigin";
+        add_header X-XSS-Protection "1; mode=block";
+        add_header X-Content-Type-Options "nosniff";
+
+        location = /favicon.ico {
+            log_not_found off;
+        }
+
+        location = /robots.txt  {
+            log_not_found off;
+        }
+
+        location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+          expires 1M;
+          add_header Cache-Control public;
+          add_header Pragma public;
+          add_header Vary Accept-Encoding;
+        }
+
+        location / {
+            try_files $uri $uri/ /index.html =404;
+        }
+
+        location ~ /\. {
+            log_not_found off;
+            deny all;
+        }
+    }
+template:
+  deployment:
+    - resource: image
+      name: vue_service
+      dockerfile: Dockerfile
+    - resource: container
+      name: vue
+      image: service_image_vue_service
+      environment: []
+      memory: 256
+      cpus: 250
+    - resource: entrypoint
+      name: vue_service
+      title: Vue.js service
+      container: service_container_vue
+      port: 8080
+  interface:
+    logs:
+      - title: NGINX error logs
+        container: service_container_vue
