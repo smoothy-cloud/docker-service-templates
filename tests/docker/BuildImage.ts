@@ -78,6 +78,7 @@ class BuildImage
     {
         await new Promise((resolve, reject) => {
 
+            let progess = ''
             this.docker.modem.followProgress(stream, onFinished, onProgress);
 
             function onFinished(err: Error|string, output: any) {
@@ -89,9 +90,10 @@ class BuildImage
 
             function onProgress(event: ProgressEvent) {
                 if (event.error) {
-                    reject(`An error occurred during the build of the Dockerfile: ${event.error}`)
+                    reject(`An error occurred during the build of the Dockerfile: \n\n ${progess} \n\n ${event.error}`)
                 }
                 if(event.stream) {
+                    progess += event.stream
                     // console.log(event.stream)
                 }
             }
