@@ -10,8 +10,6 @@
   </a>
 </p>
 
-<br>
-
 # Docker Service Templates
 
 This repository contains the Docker Service Templates for [Smoothy](https://smoothy.cloud).
