@@ -1,6 +1,6 @@
 <h3 align="center">Bring your applications 6 times faster to market</h3>
 
-<p align="center">By building, running, and scaling them with our <br> Cloud Native PaaS platform, designed for DevOps teams</p>
+<p align="center">By building, running, and scaling them with <a href="https://smoothy.cloud">Smoothy</a><br>the Cloud Native PaaS platform, designed for DevOps teams</p>
 
 <br>
 
