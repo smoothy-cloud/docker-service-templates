@@ -1,3 +1,17 @@
+<h3 align="center">Bring your applications 6 times faster to market</h3>
+
+<p align="center">By building, running, and scaling them with our <br> Cloud Native PaaS platform, designed for DevOps teams</p>
+
+<br>
+
+<p align="center">
+  <a href="https://smoothy.cloud">
+    <img src="https://smoothy.cloud/img/scenes/solution.svg" width="700px" alt="Smoothy.cloud" />
+  </a>
+</p>
+
+<br>
+
 # Docker Service Templates
 
 This repository contains the Docker Service Templates for [Smoothy](https://smoothy.cloud).
