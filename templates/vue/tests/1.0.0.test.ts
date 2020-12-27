@@ -18,7 +18,7 @@ test('the template cannot be parsed without package_manager and build_script', a
     let thrown_error
 
     try {
-        await tests.parseTemplate('service', template_path, '1.0.0', {})
+        await tests.parseTemplate('service', template_path, '1.0.0')
     } catch (error) {
         thrown_error = error
     }
@@ -35,12 +35,14 @@ test('the template cannot be parsed without package_manager and build_script', a
 describe('the template can be parsed', () => {
   
     test('with npm as package manager', async () => {
-        
-        const template = await tests.parseTemplate('service', template_path, '1.0.0', {
+
+        const variables = {
             'path_to_source_code': 'src/',
             'package_manager': 'npm',
             'build_script': "npm run build\nnpm run optimize"
-        })
+        }
+        
+        const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
     
         const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/npm.yml')
     
@@ -51,12 +53,14 @@ describe('the template can be parsed', () => {
     })
   
     test('with yarn as package manager', async () => {
-        
-        const template = await tests.parseTemplate('service', template_path, '1.0.0', {
+
+        const variables = {
             'path_to_source_code': '',
             'package_manager': 'yarn',
             'build_script': "yarn run build"
-        })
+        }
+        
+        const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
     
         const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/yarn.yml')
     
@@ -74,11 +78,13 @@ describe("the service works correctly when installed", () => {
         
         const code_repository_path = path.resolve(__dirname, 'concerns/application/')
 
-        const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', {
+        const variables = {
             'path_to_source_code': 'vue/',
             'package_manager': 'npm',
             'build_script': "npm run build"
-        })
+        }
+
+        const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', variables)
 
         try {
 
@@ -106,11 +112,13 @@ describe("the service works correctly when installed", () => {
         
         const code_repository_path = path.resolve(__dirname, 'concerns/application/vue/')
 
-        const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', {
-            'path_to_source_code': './',
+        const variables = {
+            'path_to_source_code': '/',
             'package_manager': 'yarn',
             'build_script': "yarn run build"
-        })
+        }
+
+        const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', variables)
 
         try {
 

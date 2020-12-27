@@ -19,7 +19,7 @@ test('the template cannot be parsed without mysql_version and mysql_root_passwor
     let thrown_error
 
     try {
-        await tests.parseTemplate('service', template_path, '1.0.0', {})
+        await tests.parseTemplate('service', template_path, '1.0.0')
     } catch (error) {
         thrown_error = error
     }
@@ -35,10 +35,12 @@ test('the template cannot be parsed without mysql_version and mysql_root_passwor
 
 test('the template can be parsed', async () => {
 
-    const template = await tests.parseTemplate('service', template_path, '1.0.0', {
+    const variables = {
         'mysql_version': '8.0',
         'mysql_root_password': 'abc123',
-    })
+    }
+
+    const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
 
     const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 
@@ -49,10 +51,12 @@ test('the template can be parsed', async () => {
 
 test("the mysql 5.7 service works correctly when installed", async () => {
 
-    const service = await tests.installTemplate(null, template_path, '1.0.0', {
+    const variables = {
         'mysql_version': '5.7',
         'mysql_root_password': 'secret',
-    }, 30)
+    }
+
+    const service = await tests.installTemplate(null, template_path, '1.0.0', variables, {}, 30)
 
     try {
 
@@ -82,10 +86,12 @@ test("the mysql 5.7 service works correctly when installed", async () => {
 
 test("the mysql 8.0 service works correctly when installed", async () => {
 
-    const service = await tests.installTemplate(null, template_path, '1.0.0', {
+    const variables = {
         'mysql_version': '8.0',
         'mysql_root_password': 'secret',
-    }, 30)
+    }
+
+    const service = await tests.installTemplate(null, template_path, '1.0.0', variables, {}, 30)
 
     try {
 

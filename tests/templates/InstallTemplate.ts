@@ -24,11 +24,13 @@ export class InstallTemplate
 
     async execute(
         code_repository_path: string|null, template_path: string, template_version: string, variables: Variables, 
-        initialization_time_in_seconds: number = 10
+        environment: Variables, initialization_time_in_seconds: number
     ): Promise<Service>
     {
         const service_id = uuidv4()
-        const template = await (new ParseTemplate).execute(service_id, template_path, template_version, variables)
+        const template = await (new ParseTemplate).execute(
+            service_id, template_path, template_version, variables, environment
+        )
 
         let service = {
             id: service_id,

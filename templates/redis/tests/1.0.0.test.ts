@@ -20,7 +20,7 @@ test('the template cannot be parsed without redis_version and redis_password', a
     let thrown_error
 
     try {
-        await tests.parseTemplate('service', template_path, '1.0.0', {})
+        await tests.parseTemplate('service', template_path, '1.0.0')
     } catch (error) {
         thrown_error = error
     }
@@ -36,10 +36,12 @@ test('the template cannot be parsed without redis_version and redis_password', a
 
 test('the template can be parsed', async () => {
 
-    const template = await tests.parseTemplate('service', template_path, '1.0.0', {
+    const variables = {
         'redis_version': '6.0',
         'redis_password': 'abc123',
-    })
+    }
+
+    const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
 
     const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 
@@ -50,10 +52,12 @@ test('the template can be parsed', async () => {
 
 test("the redis 5.0 service works correctly when installed", async () => {
 
-    const service = await tests.installTemplate(null, template_path, '1.0.0', {
+    const variables = {
         'redis_version': '5.0',
         'redis_password': 'secret',
-    })
+    }
+
+    const service = await tests.installTemplate(null, template_path, '1.0.0', variables)
 
     try {
 
@@ -81,10 +85,12 @@ test("the redis 5.0 service works correctly when installed", async () => {
 
 test("the redis 6.0 service works correctly when installed", async () => {
 
-    const service = await tests.installTemplate(null, template_path, '1.0.0', {
+    const variables = {
         'redis_version': '6.0',
         'redis_password': 'secret',
-    })
+    }
+
+    const service = await tests.installTemplate(null, template_path, '1.0.0', variables)
 
     try {
 
