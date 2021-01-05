@@ -1,0 +1,286 @@
+files:
+  Dockerfile: |-
+    #####################################
+    # BUILD ASSETS
+    #####################################
+
+    FROM node:alpine as asset-stage
+
+    RUN mkdir -p /app/services/laravel/
+    WORKDIR /app/services/laravel/
+
+    COPY code-repository/services/laravel/package*.json /app/services/laravel/
+    RUN npm install --silent
+
+    COPY code-repository/services/laravel/ /app/services/laravel/
+
+    COPY code-repository/libraries/ui-components/  /app/libraries/ui-components/
+
+    RUN npm run production
+
+    #####################################
+    # CREATE PHP CONTAINER
+    #####################################
+
+    FROM smoothy/php-7.4-fpm:1.0.0
+
+    # configure base image
+    ENV APPLICATION_ROOT /var/www/html/services/laravel/public
+
+    RUN apt-get -qq update \
+     && apt-get -qq install \
+                default-mysql-client \
+            > /dev/null \
+     && apt-get clean \
+     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+    COPY run_scheduler /etc/cron.d/run_scheduler
+    RUN crontab /etc/cron.d/run_scheduler
+
+    COPY code-repository/services/laravel/ /var/www/html/services/laravel/
+
+    COPY code-repository/libraries/ui-components/  /var/www/html/libraries/ui-components/
+
+    COPY --from=asset-stage /app/services/laravel/public /var/www/html/services/laravel/public
+
+    RUN chown -R www-data:smoothy /var/www/html \
+     && chmod -R 775 /var/www/html/services/laravel/storage \
+     && chmod -R 775 /var/www/html/services/laravel/bootstrap/cache
+
+    WORKDIR /var/www/html/services/laravel/
+
+    ARG PRIVATE_COMPOSER_REGISTRY_URL_0
+    ARG PRIVATE_COMPOSER_REGISTRY_USERNAME_0
+    ARG PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+    RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_0 $PRIVATE_COMPOSER_REGISTRY_USERNAME_0 $PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+
+    RUN composer install --quiet --ignore-platform-reqs --no-interaction --prefer-dist
+
+    COPY run.sh /entrypoints/run.sh
+  run.sh: |
+    #!/bin/bash
+
+    #####################################
+    # prepare Laravel application
+    #####################################
+
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan migrate --force
+    rm public/storage
+    php artisan storage:link
+
+    cron
+  run_scheduler: |-
+    * * * * * /usr/local/bin/php /var/www/html/services/laravel/artisan schedule:run > /proc/1/fd/1 2> /proc/1/fd/2
+    # An empty line is required at the end of this file for a valid cron file.
+  server.conf: |-
+    server {
+        listen 8080;
+        listen [::]:8080 default ipv6only=on;
+        server_name _;
+
+        root /usr/share/nginx/html/services/laravel/public;
+        index index.php index.html index.htm;
+        error_page 404 /index.php;
+        charset utf-8;
+
+        add_header X-Frame-Options "sameorigin";
+        add_header X-XSS-Protection "1; mode=block";
+        add_header X-Content-Type-Options "nosniff";
+
+        location = /favicon.ico {
+            log_not_found off;
+        }
+
+        location = /robots.txt  {
+            log_not_found off;
+        }
+
+        location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+          expires 1M;
+          add_header Cache-Control public;
+          add_header Pragma public;
+          add_header Vary Accept-Encoding;
+        }
+
+        location ~ \.php$ {
+
+            root /var/www/html/services/laravel/public;
+
+            # Defines a regular expression that captures two values. The first becomes the
+            # value of the $fastcgi_script_name variable, the second becomes the value of
+            # the $fastcgi_path_info variable.
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;
+
+            # Sets the address of a FastCGI server. The address can be specified as a
+            # domain name or IP address, and a port, or as a UNIX-domain socket path.
+            fastcgi_pass service_container_laravel:9000;
+
+            # Sets a file name that will be appended after a URI that ends with a slash,
+            # in the value of the $fastcgi_script_name variable.
+            fastcgi_index index.php;
+
+            include /etc/nginx/fastcgi_params;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            fastcgi_param PATH_INFO $fastcgi_path_info;
+
+        }
+
+        location / {
+            try_files $uri $uri/ /index.php?$query_string =404;
+        }
+
+        location ~ /\. {
+            log_not_found off;
+            deny all;
+        }
+    }
+template:
+  deployment:
+    - resource: image
+      name: laravel
+      dockerfile: Dockerfile
+      arguments:
+        - key: PRIVATE_COMPOSER_REGISTRY_URL_0
+          value: private.packagist.com
+        - key: PRIVATE_COMPOSER_REGISTRY_USERNAME_0
+          value: john.doe@example.com
+        - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+          value: secret
+    - resource: volume
+      name: laravel_data
+    - resource: config_file
+      name: server_conf
+      contents: |-
+        server {
+            listen 8080;
+            listen [::]:8080 default ipv6only=on;
+            server_name _;
+
+            root /usr/share/nginx/html/services/laravel/public;
+            index index.php index.html index.htm;
+            error_page 404 /index.php;
+            charset utf-8;
+
+            add_header X-Frame-Options "sameorigin";
+            add_header X-XSS-Protection "1; mode=block";
+            add_header X-Content-Type-Options "nosniff";
+
+            location = /favicon.ico {
+                log_not_found off;
+            }
+
+            location = /robots.txt  {
+                log_not_found off;
+            }
+
+            location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+              expires 1M;
+              add_header Cache-Control public;
+              add_header Pragma public;
+              add_header Vary Accept-Encoding;
+            }
+
+            location ~ \.php$ {
+
+                root /var/www/html/services/laravel/public;
+
+                # Defines a regular expression that captures two values. The first becomes the
+                # value of the $fastcgi_script_name variable, the second becomes the value of
+                # the $fastcgi_path_info variable.
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+
+                # Sets the address of a FastCGI server. The address can be specified as a
+                # domain name or IP address, and a port, or as a UNIX-domain socket path.
+                fastcgi_pass service_container_laravel:9000;
+
+                # Sets a file name that will be appended after a URI that ends with a slash,
+                # in the value of the $fastcgi_script_name variable.
+                fastcgi_index index.php;
+
+                include /etc/nginx/fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param PATH_INFO $fastcgi_path_info;
+
+            }
+
+            location / {
+                try_files $uri $uri/ /index.php?$query_string =404;
+            }
+
+            location ~ /\. {
+                log_not_found off;
+                deny all;
+            }
+        }
+    - resource: container
+      name: laravel
+      image: service_image_laravel
+      volume_mounts:
+        - volume: service_volume_laravel_data
+          mount_path: /var/www/html
+      environment:
+        - key: APP_KEY
+          value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
+        - key: APP_ENV
+          value: production
+        - key: APP_DEBUG
+          value: false
+        - key: TIMEZONE
+          value: Europe/Brussels
+        - key: MAX_FILE_UPLOAD
+          value: 25
+        - key: OPCACHE
+          value: true
+      memory: 256
+      cpus: 250
+    - resource: container
+      name: daemon_0
+      image: service_image_laravel
+      command: php artisan horizon
+      volume_mounts:
+        - volume: service_volume_laravel_data
+          mount_path: /var/www/html
+      environment:
+        - key: APP_KEY
+          value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
+        - key: APP_ENV
+          value: production
+        - key: APP_DEBUG
+          value: false
+        - key: TIMEZONE
+          value: Europe/Brussels
+      memory: 256
+      cpus: 250
+    - resource: container
+      name: nginx
+      image: smoothy/nginx-1.18:1.0.0
+      config_file_mounts:
+        - config_file: service_config_file_server_conf
+          mount_path: /etc/nginx/conf.d/server.conf
+      volume_mounts:
+        - volume: service_volume_laravel_data
+          mount_path: /usr/share/nginx/html
+      environment:
+        - key: MAX_FILE_UPLOAD
+          value: 25
+      memory: 256
+      cpus: 250
+    - resource: entrypoint
+      name: laravel_service
+      title: Laravel service
+      container: service_container_nginx
+      port: 8080
+  interface:
+    volumes:
+      - title: Laravel service
+        volume: service_volume_laravel_data
+    logs:
+      - title: NGINX error logs
+        container: service_container_nginx
+      - title: Laravel logs
+        container: service_container_laravel
+      - title: 'Daemon logs: php artisan horizon'
+        container: service_container_daemon_0
