@@ -13,7 +13,7 @@ RUN yarn install --silent
 
 COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/app/', variable.path_to_source_code, '/') }}
 
-{% for path_to_shared_library in variable.paths_to_shared_libraries|list %}
+{% for path_to_shared_library in variable.paths_to_shared_libraries %}
 COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/app/', path_to_shared_library, '/') }}
 {% endfor %}
 
