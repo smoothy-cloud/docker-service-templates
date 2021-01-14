@@ -1,13 +1,8 @@
 api: v1
 
 meta:
-  icon: laravel
   name: Laravel
-  baseline: The PHP Framework for Web Artisans
-  description: >
-    The PHP Framework for Web Artisans
-  categories:
-    - php
+  description: The PHP Framework for Web Artisans
 
 form:
   - title: Source code

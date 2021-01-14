@@ -1,14 +1,8 @@
 api: v1
 
 meta:
-  icon: vuejs
   name: Vue.js
-  baseline: The Progressive JavaScript Framework.
-  description: >
-    The Progressive JavaScript Framework.
-  categories:
-    - static
-    - javascript
+  description: The Progressive JavaScript Framework
 
 form:
   - title: Source code

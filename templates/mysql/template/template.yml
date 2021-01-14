@@ -1,13 +1,8 @@
 api: v1
 
 meta:
-  icon: mysql
   name: MySQL
-  baseline: An open-source relational database management system.
-  description: >
-    MySQL is an open-source relational database management system.
-  categories:
-    - database
+  description: An open-source relational database management system
 
 form:
   - title: General

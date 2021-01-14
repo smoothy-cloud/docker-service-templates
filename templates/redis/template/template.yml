@@ -1,13 +1,8 @@
 api: v1
 
 meta:
-  icon: redis
   name: Redis
-  baseline: An open-source key-value datastore.
-  description: >
-    Redis is an open-source key-value datastore.
-  categories:
-    - database
+  description: An open-source key-value datastore.
 
 form:
   - title: General

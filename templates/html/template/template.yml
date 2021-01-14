@@ -1,13 +1,8 @@
 api: v1
 
 meta:
-  icon: html
   name: HTML
-  baseline: Static HTML website
-  description: >
-    Static HTML website
-  categories:
-    - static
+  description: Static HTML website
 
 form:
   - title: Source code
