@@ -71,6 +71,12 @@ deployment:
     port: 3306
 
 interface:
+  shared_variables:
+    MYSQL_URL: "mysql://root:{{ variable.mysql_root_password }}@{{ entrypoint.mysql.host }}:{{ entrypoint.mysql.port }}"
+    MYSQL_HOST: "{{ entrypoint.mysql.host }}"
+    MYSQL_PORT: "{{ entrypoint.mysql.port }}"
+    MYSQL_USER: "root"
+    MYSQL_PASSWORD: "{{ variable.mysql_root_password }}"
   logs:
     - title: MySQL logs
       container: "{* container.mysql *}"

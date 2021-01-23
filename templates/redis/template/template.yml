@@ -63,6 +63,11 @@ deployment:
     port: 6379
 
 interface:
+  shared_variables:
+    REDIS_URL: "redis://:{{ variable.redis_password }}@{{ entrypoint.redis.host }}:{{ entrypoint.redis.port }}"
+    REDIS_HOST: "{{ entrypoint.redis.host }}"
+    REDIS_PORT: "{{ entrypoint.redis.port }}"
+    REDIS_PASSWORD: "{{ variable.redis_password }}"
   logs:
     - title: Redis logs
       container: "{* container.redis *}"
