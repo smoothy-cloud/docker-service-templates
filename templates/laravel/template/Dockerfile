@@ -18,7 +18,7 @@ RUN yarn install --silent
 
 COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/app/', variable.path_to_source_code, '/') }}
 
-{% for path_to_shared_library in variable.paths_to_shared_libraries|list %}
+{% for path_to_shared_library in variable.paths_to_shared_libraries %}
 COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/app/', path_to_shared_library, '/') }}
 {% endfor %}
 
@@ -41,7 +41,7 @@ ENV APPLICATION_ROOT {{ path('/var/www/html', variable.path_to_source_code, '/pu
 {% if variable.system_dependencies|length > 0 %}
 RUN apt-get -qq update \
  && apt-get -qq install \
-    {% for dependency in variable.system_dependencies|list %}
+    {% for dependency in variable.system_dependencies %}
         {{ dependency }} \
     {% endfor %}
     > /dev/null \
@@ -56,7 +56,7 @@ RUN crontab /etc/cron.d/run_scheduler
 
 COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/var/www/html', variable.path_to_source_code, '/') }}
 
-{% for path_to_shared_library in variable.paths_to_shared_libraries|list %}
+{% for path_to_shared_library in variable.paths_to_shared_libraries %}
 COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/var/www/html', path_to_shared_library, '/') }}
 {% endfor %}
 
@@ -70,11 +70,11 @@ RUN chown -R www-data:smoothy /var/www/html \
 
 WORKDIR {{ path('/var/www/html/', variable.path_to_source_code) }}
 
-{% for private_composer_registry in variable.private_composer_registries|list %}
-ARG PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.index0 }}
-ARG PRIVATE_COMPOSER_REGISTRY_USERNAME_{{ loop.index0 }}
-ARG PRIVATE_COMPOSER_REGISTRY_PASSWORD_{{ loop.index0 }}
-RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.index0 }} $PRIVATE_COMPOSER_REGISTRY_USERNAME_{{ loop.index0 }} $PRIVATE_COMPOSER_REGISTRY_PASSWORD_{{ loop.index0 }}
+{% for private_composer_registry in variable.private_composer_registries %}
+ARG PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }}
+ARG PRIVATE_COMPOSER_REGISTRY_USERNAME_{{ loop.key }}
+ARG PRIVATE_COMPOSER_REGISTRY_PASSWORD_{{ loop.key }}
+RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }} $PRIVATE_COMPOSER_REGISTRY_USERNAME_{{ loop.key }} $PRIVATE_COMPOSER_REGISTRY_PASSWORD_{{ loop.key }}
 {% endfor %}
 
 RUN composer install --quiet --ignore-platform-reqs --no-interaction --prefer-dist
