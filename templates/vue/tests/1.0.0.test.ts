@@ -18,7 +18,7 @@ test('the template cannot be parsed without package_manager and build_script', a
     let thrown_error
 
     try {
-        await tests.parseTemplate('service', template_path, '1.0.0')
+        await tests.parseTemplate('app', 'website', template_path, '1.0.0')
     } catch (error) {
         thrown_error = error
     }
@@ -42,7 +42,7 @@ describe('the template can be parsed', () => {
             'build_script': "npm run build\nnpm run optimize"
         }
         
-        const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
+        const template = await tests.parseTemplate('app', 'website', template_path, '1.0.0', variables)
     
         const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/npm.yml')
     
@@ -60,7 +60,7 @@ describe('the template can be parsed', () => {
             'build_script': "yarn run build"
         }
         
-        const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
+        const template = await tests.parseTemplate('app', 'website', template_path, '1.0.0', variables)
     
         const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/yarn.yml')
     

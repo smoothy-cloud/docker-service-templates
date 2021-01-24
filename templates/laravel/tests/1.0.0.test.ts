@@ -49,7 +49,7 @@ test('the template can be parsed', async () => {
         'APP_DEBUG': false,
     }
 
-    const template = await tests.parseTemplate('service', template_path, '1.0.0', variables, environment)
+    const template = await tests.parseTemplate('app', 'backend', template_path, '1.0.0', variables, environment)
 
     const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 

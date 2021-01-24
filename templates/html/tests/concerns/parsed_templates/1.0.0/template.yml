@@ -55,19 +55,22 @@ files:
 template:
   deployment:
   - resource: image
+    id: app_service_website_image_html_service
     name: html_service
     dockerfile: Dockerfile
   - resource: container
+    id: app_service_website_container_html
     name: html
-    image: service_image_html_service
+    image: app_service_website_image_html_service
     memory: 256
     cpus: 250
   - resource: entrypoint
+    id: app_service_website_entrypoint_html_service
     name: html_service
     title: HTML service
-    container: service_container_html
+    container: app_service_website_container_html
     port: 8080
   interface:
     logs:
     - title: NGINX error logs
-      container: service_container_html
+      container: app_service_website_container_html

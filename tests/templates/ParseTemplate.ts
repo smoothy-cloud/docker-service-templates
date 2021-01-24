@@ -5,8 +5,8 @@ import { Template, Variables } from '@/types'
 export class ParseTemplate 
 {
     async execute(
-        service_id: string, template_path: string, template_version: string, variables: Variables, 
-        environment: Variables
+        application_slug: string, service_id: string, template_path: string, template_version: string, 
+        variables: Variables, environment: Variables
     ): Promise<Template>
     {
         const template = await (new ImportTemplate).execute(template_path, 'docker_server')
@@ -17,7 +17,9 @@ export class ParseTemplate
 
         const versioned_template = template.versions[template_version]
 
-        return await (new SmoothyApi).parseTemplate(versioned_template, service_id, variables, environment)
+        return await (new SmoothyApi).parseTemplate(
+            application_slug, service_id, versioned_template, variables, environment
+        )
     }
 }
 

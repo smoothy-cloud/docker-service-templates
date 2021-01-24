@@ -22,9 +22,7 @@ class BuildImage
         this.docker = new Docker()
     }
 
-    async execute(
-        application_id: string, code_repository_path: string, template: Template, image: Image
-    ): Promise<void>
+    async execute(code_repository_path: string, template: Template, image: Image): Promise<void>
     {
         const build_directory: Directory = tmp.dirSync()
 
@@ -34,7 +32,7 @@ class BuildImage
 
             this.copyImageFilesToBuildFolder(template.files, build_directory)
 
-            const stream: NodeJS.ReadableStream = await this.buildImage(application_id, image, build_directory)
+            const stream: NodeJS.ReadableStream = await this.buildImage(image, build_directory)
 
             await this.processBuildOutput(stream)
 
@@ -64,13 +62,13 @@ class BuildImage
         }
     }
 
-    async buildImage(application_id: string, image: Image, build_directory: Directory): Promise<NodeJS.ReadableStream>
+    async buildImage(image: Image, build_directory: Directory): Promise<NodeJS.ReadableStream>
     {
         const pack = tarfs.pack(build_directory.name)
 
         return await this.docker.buildImage(pack, {
             dockerfile: image.dockerfile,
-            t: `${application_id}_image_${image.name}`,
+            t: image.id,
         })
     }
 

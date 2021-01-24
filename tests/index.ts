@@ -12,11 +12,11 @@ export function parseYamlFile(file_path: string): any {
 }
 
 export async function parseTemplate(
-    service_id: string, template_path: string, template_version: string, variables: Variables = {},
-    environment: Variables = {}
+    application_slug: string, service_id: string, template_path: string, template_version: string, 
+    variables: Variables = {}, environment: Variables = {}
 ): Promise<Template> {
     return await (new ParseTemplate).execute(
-        service_id, template_path, template_version, variables, environment
+        application_slug, service_id, template_path, template_version, variables, environment
     )
 }
 

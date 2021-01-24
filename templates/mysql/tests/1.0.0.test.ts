@@ -19,7 +19,7 @@ test('the template cannot be parsed without mysql_version and mysql_root_passwor
     let thrown_error
 
     try {
-        await tests.parseTemplate('service', template_path, '1.0.0')
+        await tests.parseTemplate('app', 'database', template_path, '1.0.0')
     } catch (error) {
         thrown_error = error
     }
@@ -40,7 +40,7 @@ test('the template can be parsed', async () => {
         'mysql_root_password': 'abc123',
     }
 
-    const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
+    const template = await tests.parseTemplate('app', 'database', template_path, '1.0.0', variables)
 
     const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 

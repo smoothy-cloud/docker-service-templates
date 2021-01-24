@@ -18,7 +18,7 @@ test('the template cannot be parsed without path_to_source_code', async () => {
     let thrown_error
 
     try {
-        await tests.parseTemplate('service', template_path, '1.0.0')
+        await tests.parseTemplate('app', 'website', template_path, '1.0.0')
     } catch (error) {
         thrown_error = error
     }
@@ -37,7 +37,7 @@ test('the template can be parsed', async () => {
         'path_to_source_code': 'src/',
     }
 
-    const template = await tests.parseTemplate('service', template_path, '1.0.0', variables)
+    const template = await tests.parseTemplate('app', 'website', template_path, '1.0.0', variables)
 
     const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 

@@ -54,6 +54,7 @@ export interface Template {
 
 export interface Image {
     name: string;
+    id: string;
     resource: "image";
     dockerfile: string;
     code_repository: string;
@@ -61,11 +62,13 @@ export interface Image {
 
 export interface Volume {
     name: string;
+    id: string;
     resource: "volume";
 }
 
 export interface ConfigFile {
     name: string;
+    id: string;
     resource: "config_file";
     contents: string;
 }
@@ -91,6 +94,7 @@ export interface ConfigFileMount {
 
 export interface Container {
     name: string;
+    id: string;
     resource: "container";
     image: string;
     command?: CommandPart[];
@@ -101,6 +105,7 @@ export interface Container {
 
 export interface Entrypoint {
     name: string;
+    id: string;
     resource: "entrypoint";
     container: string;
     port: number;

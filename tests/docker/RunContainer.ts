@@ -16,9 +16,8 @@ class RunContainer
 
     async execute(directory: Directory, service_id: string, entrypoints: Entrypoint[], container: Container)
     {
-        const container_slug = `${service_id}_container_${container.name}`
         const docker_containers = await this.docker.listContainers()
-        const container_exists = docker_containers.flatMap(container => container.Names).includes(`/${container_slug}`)
+        const container_exists = docker_containers.flatMap(container => container.Names).includes(container.id)
 
         if(container_exists) return
 
@@ -41,11 +40,11 @@ class RunContainer
         const port_bindings: PortBindings = {}
 
         entrypoints
-            .filter(entrypoint => entrypoint.container === container_slug)
+            .filter(entrypoint => entrypoint.container === container.id)
             .forEach(entrypoint => port_bindings[`${entrypoint.port}/tcp`] = [ { HostPort: `${entrypoint.host_port}` } ])
 
         const config: Docker.ContainerCreateOptions = {
-            name: container_slug,
+            name: container.id,
             Tty: true,
             Env: environment.map(environment_variable => `${environment_variable.key}=${environment_variable.value}`),
             Image: container.image,

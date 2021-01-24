@@ -27,9 +27,10 @@ export class InstallTemplate
         environment: Variables, initialization_time_in_seconds: number
     ): Promise<Service>
     {
-        const service_id = uuidv4()
+        const application_slug = uuidv4().substring(0, 8)
+        const service_id = uuidv4().substring(0, 8)
         const template = await (new ParseTemplate).execute(
-            service_id, template_path, template_version, variables, environment
+            application_slug, service_id, template_path, template_version, variables, environment
         )
 
         let service = {
@@ -40,8 +41,8 @@ export class InstallTemplate
 
         try {
             await new CreateNetwork().execute('smoothy')
-            await this.buildImages(service_id, code_repository_path, template)
-            await this.createVolumes(service_id, template)
+            await this.buildImages(code_repository_path, template)
+            await this.createVolumes(template)
             await this.createConfigFiles(service_id, template)
             service.entrypoints = await this.runContainers(service_id, template)
         } catch (error) {
@@ -54,7 +55,7 @@ export class InstallTemplate
         return service
     }
 
-    async buildImages(service_id: string, code_repository_path: string|null, template: Template): Promise<void>
+    async buildImages(code_repository_path: string|null, template: Template): Promise<void>
     {
         const images: Image[] = []
 
@@ -70,11 +71,11 @@ export class InstallTemplate
         }
 
         for(const image of images) {
-            await new BuildImage().execute(service_id, code_repository_path, template, image)
+            await new BuildImage().execute(code_repository_path, template, image)
         }
     }
 
-    async createVolumes(service_id: string, template: Template): Promise<void>
+    async createVolumes(template: Template): Promise<void>
     {
         const volumes: Volume[] = []
 
@@ -86,7 +87,7 @@ export class InstallTemplate
         if(volumes.length === 0) return
 
         for(const volume of volumes) {
-            await new CreateVolume().execute(service_id, volume)
+            await new CreateVolume().execute(volume)
         }
     }
 
@@ -106,8 +107,7 @@ export class InstallTemplate
         mkdirp.sync(folder_path)
 
         for(const config_file of config_files) {
-            const file_path = `${folder_path}/${service_id}_config_file_${config_file.name}`
-            fs.writeFileSync(file_path, config_file.contents)
+            fs.writeFileSync(`${folder_path}/${config_file.id}`, config_file.contents)
         }
     }
 

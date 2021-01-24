@@ -24,7 +24,7 @@ export class UninstallTemplate
 
             if(resource.resource !== 'container') return
 
-            promises.push(new DeleteContainer().execute(service.id, resource))
+            promises.push(new DeleteContainer().execute(resource))
 
         })
 
@@ -50,7 +50,7 @@ export class UninstallTemplate
             
             if(resource.resource !== 'volume') return
             
-            promises.push(new DeleteVolume().execute(service.id, resource))
+            promises.push(new DeleteVolume().execute(resource))
             
          })
 
@@ -65,7 +65,7 @@ export class UninstallTemplate
             
             if(resource.resource !== 'image') return
             
-            promises.push(new DeleteImage().execute(service.id, resource))
+            promises.push(new DeleteImage().execute(resource))
             
         })
 

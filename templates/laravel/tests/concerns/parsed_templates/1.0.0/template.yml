@@ -116,7 +116,7 @@ files:
 
             # Sets the address of a FastCGI server. The address can be specified as a
             # domain name or IP address, and a port, or as a UNIX-domain socket path.
-            fastcgi_pass service_container_laravel:9000;
+            fastcgi_pass app_service_backend_container_laravel:9000;
 
             # Sets a file name that will be appended after a URI that ends with a slash,
             # in the value of the $fastcgi_script_name variable.
@@ -140,6 +140,7 @@ files:
 template:
   deployment:
     - resource: image
+      id: app_service_backend_image_laravel
       name: laravel
       dockerfile: Dockerfile
       arguments:
@@ -150,8 +151,10 @@ template:
         - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
     - resource: volume
+      id: app_service_backend_volume_laravel_data
       name: laravel_data
     - resource: config_file
+      id: app_service_backend_config_file_server_conf
       name: server_conf
       contents: |-
         server {
@@ -194,7 +197,7 @@ template:
 
                 # Sets the address of a FastCGI server. The address can be specified as a
                 # domain name or IP address, and a port, or as a UNIX-domain socket path.
-                fastcgi_pass service_container_laravel:9000;
+                fastcgi_pass app_service_backend_container_laravel:9000;
 
                 # Sets a file name that will be appended after a URI that ends with a slash,
                 # in the value of the $fastcgi_script_name variable.
@@ -216,10 +219,11 @@ template:
             }
         }
     - resource: container
+      id: app_service_backend_container_laravel
       name: laravel
-      image: service_image_laravel
+      image: app_service_backend_image_laravel
       volume_mounts:
-        - volume: service_volume_laravel_data
+        - volume: app_service_backend_volume_laravel_data
           mount_path: /var/www/html
       environment:
         - key: APP_KEY
@@ -237,11 +241,12 @@ template:
       memory: 256
       cpus: 250
     - resource: container
+      id: app_service_backend_container_daemon_0
       name: daemon_0
-      image: service_image_laravel
+      image: app_service_backend_image_laravel
       command: php artisan horizon
       volume_mounts:
-        - volume: service_volume_laravel_data
+        - volume: app_service_backend_volume_laravel_data
           mount_path: /var/www/html
       environment:
         - key: APP_KEY
@@ -255,13 +260,14 @@ template:
       memory: 256
       cpus: 250
     - resource: container
+      id: app_service_backend_container_nginx
       name: nginx
       image: smoothy/nginx-1.18:1.0.0
       config_file_mounts:
-        - config_file: service_config_file_server_conf
+        - config_file: app_service_backend_config_file_server_conf
           mount_path: /etc/nginx/conf.d/server.conf
       volume_mounts:
-        - volume: service_volume_laravel_data
+        - volume: app_service_backend_volume_laravel_data
           mount_path: /usr/share/nginx/html
       environment:
         - key: MAX_FILE_UPLOAD
@@ -269,18 +275,19 @@ template:
       memory: 256
       cpus: 250
     - resource: entrypoint
+      id: app_service_backend_entrypoint_laravel_service
       name: laravel_service
       title: Laravel service
-      container: service_container_nginx
+      container: app_service_backend_container_nginx
       port: 8080
   interface:
     volumes:
       - title: Laravel service
-        volume: service_volume_laravel_data
+        volume: app_service_backend_volume_laravel_data
     logs:
       - title: NGINX error logs
-        container: service_container_nginx
+        container: app_service_backend_container_nginx
       - title: Laravel logs
-        container: service_container_laravel
+        container: app_service_backend_container_laravel
       - title: 'Daemon logs: php artisan horizon'
-        container: service_container_daemon_0
+        container: app_service_backend_container_daemon_0
