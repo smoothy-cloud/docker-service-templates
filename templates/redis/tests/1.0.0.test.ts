@@ -5,6 +5,7 @@ import 'jest-extended'
 import { promisify } from 'util'
 import redis from 'redis'
 
+const template_version = '1.0.0'
 const template_path = path.resolve(__dirname, '../')
 
 test('the template is valid', async () => {
@@ -15,12 +16,12 @@ test('the template is valid', async () => {
 
 })
 
-test('the template cannot be parsed without redis_version and redis_password', async () => {
+test('the template cannot be parsed without version and password', async () => {
 
     let thrown_error
 
     try {
-        await tests.parseTemplate('app', 'cache', template_path, '1.0.0')
+        await tests.parseTemplate('app', 'cache', template_path, template_version)
     } catch (error) {
         thrown_error = error
     }
@@ -28,8 +29,8 @@ test('the template cannot be parsed without redis_version and redis_password', a
     expect(thrown_error).toBeInstanceOf(ApiError)
     expect(thrown_error.status).toBe(422)
     expect(thrown_error.errors).toMatchObject({
-        redis_version: [ 'The version field is required.' ],
-        redis_password: [ 'The password field is required.' ],
+        version: [ 'The version field is required.' ],
+        password: [ 'The password field is required.' ],
     })
 
 })
@@ -37,11 +38,11 @@ test('the template cannot be parsed without redis_version and redis_password', a
 test('the template can be parsed', async () => {
 
     const variables = {
-        'redis_version': '6.0',
-        'redis_password': 'abc123',
+        'version': '6',
+        'password': 'abc123',
     }
 
-    const template = await tests.parseTemplate('app', 'cache', template_path, '1.0.0', variables)
+    const template = await tests.parseTemplate('app', 'cache', template_path, template_version, variables)
 
     const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
 
@@ -50,14 +51,14 @@ test('the template can be parsed', async () => {
 
 })
 
-test("the redis 5.0 service works correctly when installed", async () => {
+test("the redis 5 service works correctly when installed", async () => {
 
     const variables = {
-        'redis_version': '5.0',
-        'redis_password': 'secret',
+        'version': '5',
+        'password': 'secret',
     }
 
-    const service = await tests.installTemplate(null, template_path, '1.0.0', variables)
+    const service = await tests.installTemplate(null, template_path, template_version, variables)
 
     try {
 
@@ -83,14 +84,14 @@ test("the redis 5.0 service works correctly when installed", async () => {
 
 }, 1000 * 60 * 3)
 
-test("the redis 6.0 service works correctly when installed", async () => {
+test("the redis 6 service works correctly when installed", async () => {
 
     const variables = {
-        'redis_version': '6.0',
-        'redis_password': 'secret',
+        'version': '6',
+        'password': 'secret',
     }
 
-    const service = await tests.installTemplate(null, template_path, '1.0.0', variables)
+    const service = await tests.installTemplate(null, template_path, template_version, variables)
 
     try {
 
