@@ -7,27 +7,21 @@ meta:
 form:
   - title: General
     questions:
-      - variable: redis_version
+
+      - variable: version
         label: Version
+        hint: > 
+          The version of Redis datastore.
         required: true
         immutable: true
         type: select
         options:
-          - value: '5.0'
-            label: '5.0'
-          - value: '6.0'
-            label: '6.0'
-      - variable: redis_password
-        label: Password
-        hint: >
-          Smoothy generates a random 64 character long string as password. However, you are free to
-          change this and choose your own password.
-        required: true
-        immutable: true
-        type: string
-        default: "{{ random_string(64) }}"
-  - title: Resources
-    questions:
+          - value: '5'
+            label: '5'
+          - value: '6'
+            label: '6'
+        default: '6.0'
+
       - variable: memory
         label: Memory
         hint: >
@@ -35,6 +29,7 @@ form:
         type: binary_number
         minimum: 1024
         default: 2048
+
       - variable: cpus
         label: CPU
         hint: >
@@ -42,20 +37,50 @@ form:
         type: number
         default: 1000
 
+  - title: Authentication
+    questions:
+
+      - variable: password
+        label: Password
+        hint: >
+          The password of the datastore that is configured the first time that the service is 
+          installed on a server.
+        required: true
+        immutable: true
+        type: password
+        default: "{{ environment.REDIS_PASSWORD }}"
+
 deployment:
+
   - resource: volume
-    name: redis_data
+    name: redis_5
+    if: "{{ variable.version == '5' }}"
+
+  - resource: volume
+    name: redis_6
+    if: "{{ variable.version == '6' }}"
+
   - resource: container
     name: redis
-    image: bitnami/redis:{{ variable.redis_version }}
+    image:
+      switch:
+        - case: "{{ variable.version == '5' }}"
+          value: bitnami/redis:5.0
+        - case: "{{ variable.version == '6' }}"
+          value: bitnami/redis:6.0
     volume_mounts:
-      - volume: "{* volume.redis_data *}"
+      - volume: "{* volume.redis_5 *}"
         mount_path: /bitnami/redis/data
+        if: "{{ variable.version == '5' }}"
+      - volume: "{* volume.redis_6 *}"
+        mount_path: /bitnami/redis/data
+        if: "{{ variable.version == '6' }}"
     environment:
       - key: REDIS_PASSWORD
-        value: "{{ variable.redis_password }}"
+        value: "{{ variable.password }}"
     memory: "{{ variable.memory }}"
     cpus: "{{ variable.cpus }}"
+
   - resource: entrypoint
     name: redis
     title: Redis database
@@ -64,10 +89,10 @@ deployment:
 
 interface:
   shared_variables:
-    REDIS_URL: "redis://:{{ variable.redis_password }}@{{ entrypoint.redis.host }}:{{ entrypoint.redis.port }}"
+    REDIS_URL: "redis://:{{ variable.password }}@{{ entrypoint.redis.host }}:{{ entrypoint.redis.port }}"
     REDIS_HOST: "{{ entrypoint.redis.host }}"
     REDIS_PORT: "{{ entrypoint.redis.port }}"
-    REDIS_PASSWORD: "{{ variable.redis_password }}"
+    REDIS_PASSWORD: "{{ variable.password }}"
   logs:
     - title: Redis logs
       container: "{* container.redis *}"

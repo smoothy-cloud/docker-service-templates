@@ -21,6 +21,14 @@ class RunContainer
 
         if(container_exists) return
 
+        const image = container.image
+        const docker_images = await this.docker.listImages()
+        const image_exists = docker_images.flatMap(image => image.RepoTags).includes(image)
+
+        if(! image_exists) {
+            await this.docker.pull(image)
+        }
+
         const command = container.command || []
         const environment = container.environment || []
         const volume_mounts = container.volume_mounts || []
@@ -47,7 +55,7 @@ class RunContainer
             name: container.id,
             Tty: true,
             Env: environment.map(environment_variable => `${environment_variable.key}=${environment_variable.value}`),
-            Image: container.image,
+            Image: image,
             HostConfig: {
                 NetworkMode: 'smoothy',
                 Binds: binds,

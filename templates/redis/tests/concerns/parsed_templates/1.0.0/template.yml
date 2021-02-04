@@ -1,27 +1,31 @@
 files: []
 template:
   deployment:
-  - resource: container
-    id: app_service_cache_container_redis
-    name: redis
-    image: bitnami/redis:6.0
-    volume_mounts:
-    - volume: app_service_cache_volume_redis_data
-      mount_path: "/bitnami/redis/data"
-    environment:
-    - key: REDIS_PASSWORD
-      value: abc123
-    memory: 2048
-    cpus: 1000
-  - resource: volume
-    id: app_service_cache_volume_redis_data
-    name: redis_data
-  - resource: entrypoint
-    id: app_service_cache_entrypoint_redis
-    name: redis
-    title: Redis database
-    container: app_service_cache_container_redis
-    port: 6379
+
+    - resource: volume
+      id: app_service_cache_volume_redis_6
+      name: redis_6
+
+    - resource: container
+      id: app_service_cache_container_redis
+      name: redis
+      image: bitnami/redis:6.0
+      volume_mounts:
+        - volume: app_service_cache_volume_redis_6
+          mount_path: /bitnami/redis/data
+      environment:
+        - key: REDIS_PASSWORD
+          value: abc123
+      memory: 2048
+      cpus: 1000
+
+    - resource: entrypoint
+      id: app_service_cache_entrypoint_redis
+      name: redis
+      title: Redis database
+      container: app_service_cache_container_redis
+      port: 6379
+
   interface:
     shared_variables:
       REDIS_URL: redis://:abc123@app_service_cache_container_redis:6379
@@ -29,5 +33,5 @@ template:
       REDIS_PORT: 6379
       REDIS_PASSWORD: abc123
     logs:
-    - title: Redis logs
-      container: app_service_cache_container_redis
+      - title: Redis logs
+        container: app_service_cache_container_redis
