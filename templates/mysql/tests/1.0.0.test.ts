@@ -23,7 +23,7 @@ test('the template can be parsed', async () => {
         'password': 's3cr3t',
         'databases': [
             { 'name': 'gaming_platform' },
-            { 'name': 'backups' },
+            { 'name': 'platform-backups' },
         ]
     }
 
@@ -45,7 +45,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         'password': 's3cr3t',
         'databases': [
             { 'name': 'gaming_platform' },
-            { 'name': 'backups' },
+            { 'name': 'platform-backups' },
         ]
     }
 
@@ -74,7 +74,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         root_pool.query('SHOW DATABASES', function(error, result, fields) {
             const rows = (result as any)
             expect(rows.find((row: any) => row.Database === 'gaming_platform')).toBeDefined()
-            expect(rows.find((row: any) => row.Database === 'backups')).toBeDefined()
+            expect(rows.find((row: any) => row.Database === 'platform-backups')).toBeDefined()
         })
 
         const user_pool = mysql.createPool({
@@ -87,7 +87,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         user_pool.query('SHOW DATABASES', function(error, result, fields) {
             const rows = (result as any)
             expect(rows.find((row: any) => row.Database === 'gaming_platform')).toBeDefined()
-            expect(rows.find((row: any) => row.Database === 'backups')).toBeDefined()
+            expect(rows.find((row: any) => row.Database === 'platform-backups')).toBeDefined()
         })
 
     } finally {
@@ -105,7 +105,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         'password': 's3cr3t',
         'databases': [
             { 'name': 'gaming_platform' },
-            { 'name': 'backups' },
+            { 'name': 'platform-backups' },
         ]
     }
 
@@ -134,7 +134,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         root_pool.query('SHOW DATABASES', function(error, result, fields) {
             const rows = (result as any)
             expect(rows.find((row: any) => row.Database === 'gaming_platform')).toBeDefined()
-            expect(rows.find((row: any) => row.Database === 'backups')).toBeDefined()
+            expect(rows.find((row: any) => row.Database === 'platform-backups')).toBeDefined()
         })
 
         const user_pool = mysql.createPool({
@@ -147,7 +147,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         user_pool.query('SHOW DATABASES', function(error, result, fields) {
             const rows = (result as any)
             expect(rows.find((row: any) => row.Database === 'gaming_platform')).toBeDefined()
-            expect(rows.find((row: any) => row.Database === 'backups')).toBeDefined()
+            expect(rows.find((row: any) => row.Database === 'platform-backups')).toBeDefined()
         })
 
     } finally {

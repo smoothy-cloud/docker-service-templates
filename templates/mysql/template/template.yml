@@ -20,6 +20,27 @@ form:
             value: "5.7"
           - label: "8.0"
             value: "8.0"
+        default: "8.0"
+
+      - variable: memory
+        label: Memory
+        hint: >
+          The amount of memory allocated to the MySQL database. MySQL is a memory intensive application as
+          it caches table and index data in main memory. The more data that can be cached, the less disk I/O is
+          required and the faster your queries run.
+        type: binary_number
+        minimum: 1024
+        default: 2048
+
+      - variable: cpus
+        label: CPU
+        hint: >
+          The number of CPU millicores allocated to the MySQL database.
+        type: number
+        default: 1000
+
+  - title: Authentication
+    questions:
 
       - variable: root_password
         label: Root password
@@ -27,7 +48,7 @@ form:
           The password for the MySQL super user who has full access to all databases.
         required: true
         immutable: true
-        type: string
+        type: password
         default: "{{ environment.MYSQL_ROOT_USER }}"
 
       - variable: user
@@ -47,8 +68,11 @@ form:
           installed on a server.
         required: true
         immutable: true
-        type: string
+        type: password
         default: "{{ environment.MYSQL_PASSWORD }}"
+
+  - title: Databases
+    questions:
 
       - variable: databases
         label: Databases
@@ -62,26 +86,6 @@ form:
             hint: The name of the database.
             type: string
             required: true
-
-  - title: Resources
-    questions:
-
-      - variable: memory
-        label: Memory
-        hint: >
-          The amount of memory allocated to the MySQL database. MySQL is a memory intensive application as
-          it caches table and index data in main memory. The more data that can be cached, the less disk I/O is
-          required and the faster your queries run.
-        type: binary_number
-        minimum: 1024
-        default: 2048
-
-      - variable: cpus
-        label: CPU
-        hint: >
-          The number of CPU millicores allocated to the MySQL database.
-        type: number
-        default: 1000
 
 deployment:
 
