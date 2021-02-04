@@ -16,11 +16,11 @@ form:
         immutable: true
         type: select
         options:
-          - value: '5'
-            label: '5'
-          - value: '6'
-            label: '6'
-        default: '6.0'
+          - value: 5
+            label: 5
+          - value: 6
+            label: 6
+        default: 6
 
       - variable: memory
         label: Memory
@@ -54,27 +54,27 @@ deployment:
 
   - resource: volume
     name: redis_5
-    if: "{{ variable.version == '5' }}"
+    if: "{{ variable.version == 5 }}"
 
   - resource: volume
     name: redis_6
-    if: "{{ variable.version == '6' }}"
+    if: "{{ variable.version == 6 }}"
 
   - resource: container
     name: redis
     image:
       switch:
-        - case: "{{ variable.version == '5' }}"
+        - case: "{{ variable.version == 5 }}"
           value: bitnami/redis:5.0
-        - case: "{{ variable.version == '6' }}"
+        - case: "{{ variable.version == 6 }}"
           value: bitnami/redis:6.0
     volume_mounts:
       - volume: "{* volume.redis_5 *}"
         mount_path: /bitnami/redis/data
-        if: "{{ variable.version == '5' }}"
+        if: "{{ variable.version == 5 }}"
       - volume: "{* volume.redis_6 *}"
         mount_path: /bitnami/redis/data
-        if: "{{ variable.version == '6' }}"
+        if: "{{ variable.version == 6 }}"
     environment:
       - key: REDIS_PASSWORD
         value: "{{ variable.password }}"
