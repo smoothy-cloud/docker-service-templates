@@ -1,30 +1,50 @@
 files: []
 template:
   deployment:
+
+  - resource: volume
+    id: app_service_database_volume_mysql_8
+    name: mysql_8
+
+  - resource: config_file
+    id: app_service_database_config_file_initialize_mysql
+    name: initialize_mysql
+    contents: |
+      CREATE DATABASE IF NOT EXISTS gaming_platform;
+      GRANT ALL PRIVILEGES ON gaming_platform.* TO 'johndoe'@'%';
+      CREATE DATABASE IF NOT EXISTS backups;
+      GRANT ALL PRIVILEGES ON backups.* TO 'johndoe'@'%';
+
   - resource: container
     id: app_service_database_container_mysql
     name: mysql
-    image: mysql:8.0
+    image: mysql:8.0      
     volume_mounts:
-    - volume: app_service_database_volume_mysql_data
+    - volume: app_service_database_volume_mysql_8
       mount_path: "/var/lib/mysql"
+    config_file_mounts:
+    - config_file: app_service_database_config_file_initialize_mysql
+      mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
     environment:
     - key: MYSQL_ROOT_PASSWORD
       value: abc123
+    - key: MYSQL_USER
+      value: johndoe
+    - key: MYSQL_PASSWORD
+      value: s3cr3t
     command:
-    - part: "--default_authentication_plugin=mysql_native_password"
     - part: "--innodb-buffer-pool-size=1717567488"
+    - part: "--default_authentication_plugin=mysql_native_password"
     memory: 2048
     cpus: 1000
-  - resource: volume
-    id: app_service_database_volume_mysql_data
-    name: mysql_data
+
   - resource: entrypoint
     id: app_service_database_entrypoint_mysql
     name: mysql
     title: MySQL database
     container: app_service_database_container_mysql
     port: 3306
+
   interface:
     shared_variables:
       MYSQL_URL: mysql://root:abc123@app_service_database_container_mysql:3306
