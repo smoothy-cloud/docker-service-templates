@@ -3,7 +3,7 @@ import path from 'path'
 import 'jest-extended'
 import mysql from 'mysql2'
 
-const template_version = 'latest'
+const template_version = '1.0.0'
 const template_path = path.resolve(__dirname, '../')
 
 test('the template is valid', async () => {
