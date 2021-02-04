@@ -3,7 +3,7 @@ import path from 'path'
 import 'jest-extended'
 import mysql from 'mysql2'
 
-const template_version = '1.0.0'
+const template_version = 'latest'
 const template_path = path.resolve(__dirname, '../')
 
 test('the template is valid', async () => {
@@ -17,10 +17,10 @@ test('the template is valid', async () => {
 test('the template can be parsed', async () => {
 
     const variables = {
-        'mysql_version': '8.0',
-        'mysql_root_password': 'abc123',
-        'mysql_user': 'johndoe',
-        'mysql_password': 's3cr3t',
+        'version': '8.0',
+        'root_password': 'abc123',
+        'user': 'johndoe',
+        'password': 's3cr3t',
         'databases': [
             { 'name': 'gaming_platform' },
             { 'name': 'backups' },
@@ -39,10 +39,10 @@ test('the template can be parsed', async () => {
 test("the mysql 5.7 service works correctly when installed", async () => {
 
     const variables = {
-        'mysql_version': '5.7',
-        'mysql_root_password': 'secret',
-        'mysql_user': 'johndoe',
-        'mysql_password': 's3cr3t',
+        'version': '5.7',
+        'root_password': 'secret',
+        'user': 'johndoe',
+        'password': 's3cr3t',
         'databases': [
             { 'name': 'gaming_platform' },
             { 'name': 'backups' },
@@ -99,10 +99,10 @@ test("the mysql 5.7 service works correctly when installed", async () => {
 test("the mysql 8.0 service works correctly when installed", async () => {
 
     const variables = {
-        'mysql_version': '8.0',
-        'mysql_root_password': 'secret',
-        'mysql_user': 'johndoe',
-        'mysql_password': 's3cr3t',
+        'version': '8.0',
+        'root_password': 'secret',
+        'user': 'johndoe',
+        'password': 's3cr3t',
         'databases': [
             { 'name': 'gaming_platform' },
             { 'name': 'backups' },

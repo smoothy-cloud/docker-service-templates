@@ -7,7 +7,8 @@ meta:
 form:
   - title: General
     questions:
-      - variable: mysql_version
+
+      - variable: version
         label: Version
         hint: >
           The version of the MySQL server.
@@ -19,15 +20,17 @@ form:
             value: "5.7"
           - label: "8.0"
             value: "8.0"
-      - variable: mysql_root_password
+
+      - variable: root_password
         label: Root password
         hint: >
           The password for the MySQL super user who has full access to all databases.
         required: true
         immutable: true
         type: string
-        default: "{{ random_string(64) }}"
-      - variable: mysql_user
+        default: "{{ environment.MYSQL_ROOT_USER }}"
+
+      - variable: user
         label: User
         hint: >
           The user is created the first time that the service is installed on a server.
@@ -35,7 +38,9 @@ form:
         required: true
         immutable: true
         type: string
-      - variable: mysql_password
+        default: "{{ environment.MYSQL_USER }}"
+
+      - variable: password
         label: Password
         hint: >
           The password for the user that is created the first time that the service is 
@@ -43,6 +48,8 @@ form:
         required: true
         immutable: true
         type: string
+        default: "{{ environment.MYSQL_PASSWORD }}"
+
       - variable: databases
         label: Databases
         hint: >
@@ -55,8 +62,10 @@ form:
             hint: The name of the database.
             type: string
             required: true
+
   - title: Resources
     questions:
+
       - variable: memory
         label: Memory
         hint: >
@@ -66,6 +75,7 @@ form:
         type: binary_number
         minimum: 1024
         default: 2048
+
       - variable: cpus
         label: CPU
         hint: >
@@ -77,11 +87,11 @@ deployment:
 
   - resource: volume
     name: mysql_5
-    if: "{{ variable.mysql_version == '5.7' }}"
+    if: "{{ variable.version == '5.7' }}"
 
   - resource: volume
     name: mysql_8
-    if: "{{ variable.mysql_version == '8.0' }}"
+    if: "{{ variable.version == '8.0' }}"
 
   - resource: config_file
     name: initialize_mysql
@@ -91,31 +101,31 @@ deployment:
     name: mysql
     image:
       switch:
-        - case: "{{ variable.mysql_version == '5.7' }}"
+        - case: "{{ variable.version == '5.7' }}"
           value: mysql:5.7
-        - case: "{{ variable.mysql_version == '8.0' }}"
+        - case: "{{ variable.version == '8.0' }}"
           value: mysql:8.0
     volume_mounts:
       - volume: "{* volume.mysql_5 *}"
         mount_path: /var/lib/mysql
-        if: "{{ variable.mysql_version == '5.7' }}"
+        if: "{{ variable.version == '5.7' }}"
       - volume: "{* volume.mysql_8 *}"
         mount_path: /var/lib/mysql
-        if: "{{ variable.mysql_version == '8.0' }}"
+        if: "{{ variable.version == '8.0' }}"
     config_file_mounts:
       - config_file: "{* config_file.initialize_mysql *}"
         mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
     environment:
       - key: MYSQL_ROOT_PASSWORD
-        value: "{{ variable.mysql_root_password }}"
+        value: "{{ variable.root_password }}"
       - key: MYSQL_USER
-        value: "{{ variable.mysql_user }}"
+        value: "{{ variable.user }}"
       - key: MYSQL_PASSWORD
-        value: "{{ variable.mysql_password }}"
+        value: "{{ variable.password }}"
     command:
       - part: --innodb-buffer-pool-size={{ (variable.memory * 0.8)|round * 1024 * 1024 }}
       - part: --default_authentication_plugin=mysql_native_password
-        if: "{{ variable.mysql_version == '8.0' }}"
+        if: "{{ variable.version == '8.0' }}"
     memory: "{{ variable.memory }}"
     cpus:  "{{ variable.cpus }}"
 
@@ -127,11 +137,11 @@ deployment:
 
 interface:
   shared_variables:
-    MYSQL_URL: "mysql://root:{{ variable.mysql_root_password }}@{{ entrypoint.mysql.host }}:{{ entrypoint.mysql.port }}"
+    MYSQL_URL: "mysql://{{ variable.user }}:{{ variable.password }}@{{ entrypoint.mysql.host }}:{{ entrypoint.mysql.port }}"
     MYSQL_HOST: "{{ entrypoint.mysql.host }}"
     MYSQL_PORT: "{{ entrypoint.mysql.port }}"
-    MYSQL_USER: "root"
-    MYSQL_PASSWORD: "{{ variable.mysql_root_password }}"
+    MYSQL_USER: "{{ variable.user }}"
+    MYSQL_PASSWORD: "{{ variable.password }}"
   logs:
     - title: MySQL logs
       container: "{* container.mysql *}"
