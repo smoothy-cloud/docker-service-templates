@@ -9,6 +9,8 @@ form:
     questions:
       - variable: mysql_version
         label: Version
+        hint: >
+          The version of the MySQL server.
         required: true
         immutable: true
         type: select
@@ -19,10 +21,40 @@ form:
             value: "8.0"
       - variable: mysql_root_password
         label: Root password
+        hint: >
+          The password for the MySQL super user who has full access to all databases.
         required: true
         immutable: true
         type: string
         default: "{{ random_string(64) }}"
+      - variable: mysql_user
+        label: User
+        hint: >
+          The user is created the first time that the service is installed on a server.
+          It is granted full access to the databases listed below. 
+        required: true
+        immutable: true
+        type: string
+      - variable: mysql_password
+        label: Password
+        hint: >
+          The password for the user that is created the first time that the service is 
+          installed on a server.
+        required: true
+        immutable: true
+        type: string
+      - variable: databases
+        label: Databases
+        hint: >
+          The databases are created the first time that the service is installed on a server.
+        type: structs
+        immutable: true
+        questions:
+          - variable: name
+            label: Name
+            hint: The name of the database.
+            type: string
+            required: true
   - title: Resources
     questions:
       - variable: memory
@@ -42,8 +74,19 @@ form:
         default: 1000
 
 deployment:
+
   - resource: volume
-    name: mysql_data
+    name: mysql_5
+    if: "{{ variable.mysql_version == '5.7' }}"
+
+  - resource: volume
+    name: mysql_8
+    if: "{{ variable.mysql_version == '8.0' }}"
+
+  - resource: config_file
+    name: initialize_mysql
+    source: initialize_mysql.sql
+
   - resource: container
     name: mysql
     image:
@@ -53,17 +96,29 @@ deployment:
         - case: "{{ variable.mysql_version == '8.0' }}"
           value: mysql:8.0
     volume_mounts:
-      - volume: "{* volume.mysql_data *}"
+      - volume: "{* volume.mysql_5 *}"
         mount_path: /var/lib/mysql
+        if: "{{ variable.mysql_version == '5.7' }}"
+      - volume: "{* volume.mysql_8 *}"
+        mount_path: /var/lib/mysql
+        if: "{{ variable.mysql_version == '8.0' }}"
+    config_file_mounts:
+      - config_file: "{* config_file.initialize_mysql *}"
+        mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
     environment:
       - key: MYSQL_ROOT_PASSWORD
         value: "{{ variable.mysql_root_password }}"
+      - key: MYSQL_USER
+        value: "{{ variable.mysql_user }}"
+      - key: MYSQL_PASSWORD
+        value: "{{ variable.mysql_password }}"
     command:
+      - part: --innodb-buffer-pool-size={{ (variable.memory * 0.8)|round * 1024 * 1024 }}
       - part: --default_authentication_plugin=mysql_native_password
         if: "{{ variable.mysql_version == '8.0' }}"
-      - part: --innodb-buffer-pool-size={{ (variable.memory * 0.8)|round * 1024 * 1024 }}
     memory: "{{ variable.memory }}"
     cpus:  "{{ variable.cpus }}"
+
   - resource: entrypoint
     name: mysql
     title: MySQL database
