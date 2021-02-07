@@ -22,13 +22,6 @@ class RunContainer
         if(container_exists) return
 
         const image = container.image
-        const docker_images = await this.docker.listImages()
-        const image_exists = docker_images.flatMap(image => image.RepoTags).includes(image)
-
-        if(! image_exists) {
-            await this.docker.pull(image)
-        }
-
         const command = container.command || []
         const environment = container.environment || []
         const volume_mounts = container.volume_mounts || []

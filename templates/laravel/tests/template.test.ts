@@ -1,12 +1,12 @@
-import * as tests from 'tests'
+import TemplateUtils from 'tests'
 import path from 'path'
 import 'jest-extended'
 
-const template_path = path.resolve(__dirname, '../')
+const utils = new TemplateUtils(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
+    const error = await utils.validateTemplate()
 
     expect(error).toBe(null)
 
@@ -49,9 +49,9 @@ test('the template can be parsed', async () => {
         'APP_DEBUG': false,
     }
 
-    const template = await tests.parseTemplate('app', 'backend', template_path, '1.0.0', variables, environment)
+    const template = await utils.parseTemplate('app', 'backend', variables, environment)
 
-    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_template.yml')
 
     expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
     expect(template.template.interface.volumes).toIncludeAllMembers(expected_template.template.interface.volumes)
@@ -90,9 +90,7 @@ test("the service works correctly when installed", async () => {
         'APP_DEBUG': false,
     }
 
-    const service = await tests.installTemplate(
-        code_repository_path, template_path, '1.0.0', variables, environment
-    )
+    const service = await utils.installTemplate(code_repository_path, variables, environment)
 
     try {
 
@@ -110,7 +108,7 @@ test("the service works correctly when installed", async () => {
         await expect(html).toContain('<tr><td class="e">upload_max_filesize</td><td class="v">25M</td><td class="v">25M</td></tr>')
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await utils.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)

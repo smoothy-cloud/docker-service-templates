@@ -1,14 +1,13 @@
-import * as tests from 'tests'
+import TemplateUtils from 'tests'
 import path from 'path'
 import 'jest-extended'
 import mysql from 'mysql2'
 
-const template_version = '1.0.0'
-const template_path = path.resolve(__dirname, '../')
+const utils = new TemplateUtils(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
+    const error = await utils.validateTemplate()
 
     expect(error).toBe(null)
 
@@ -27,9 +26,9 @@ test('the template can be parsed', async () => {
         ]
     }
 
-    const template = await tests.parseTemplate('app', 'database', template_path, template_version, variables)
+    const template = await utils.parseTemplate('app', 'database', variables)
 
-    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_template.yml')
 
     expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
     expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
@@ -49,7 +48,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         ]
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables, {}, 30)
+    const service = await utils.installTemplate(null, variables, {}, 30)
 
     try {
 
@@ -91,7 +90,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         })
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await utils.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)
@@ -109,7 +108,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         ]
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables, {}, 30)
+    const service = await utils.installTemplate(null, variables, {}, 30)
 
     try {
 
@@ -151,7 +150,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         })
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await utils.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)

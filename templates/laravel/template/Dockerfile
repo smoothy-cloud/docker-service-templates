@@ -10,10 +10,11 @@ WORKDIR {{ path('/app/', variable.path_to_source_code) }}
 
 {% if variable.package_manager == "npm" %}
 COPY {{ path('code-repository/', variable.path_to_source_code, '/package*.json') }} {{ path('/app/', variable.path_to_source_code, '/') }}
-RUN npm install --silent
+RUN npm config set loglevel "error" \
+ && npm install
 {% elseif variable.package_manager == "yarn" %}
 COPY {{ path('code-repository/', variable.path_to_source_code, '/package*.json') }} {{ path('code-repository/', variable.path_to_source_code, '/yarn.*') }} {{ path('/app/', variable.path_to_source_code, '/') }}
-RUN yarn install --silent
+RUN yarn install
 {% endif %}
 
 COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/app/', variable.path_to_source_code, '/') }}

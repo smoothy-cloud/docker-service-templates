@@ -1,16 +1,15 @@
-import * as tests from 'tests'
+import TemplateUtils from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
 import 'jest-extended'
 import { promisify } from 'util'
 import redis from 'redis'
 
-const template_version = '1.0.0'
-const template_path = path.resolve(__dirname, '../')
+const utils = new TemplateUtils(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
+    const error = await utils.validateTemplate()
 
     expect(error).toBe(null)
 
@@ -21,7 +20,7 @@ test('the template cannot be parsed without version and password', async () => {
     let thrown_error
 
     try {
-        await tests.parseTemplate('app', 'cache', template_path, template_version)
+        await utils.parseTemplate('app', 'cache')
     } catch (error) {
         thrown_error = error
     }
@@ -42,9 +41,9 @@ test('the template can be parsed', async () => {
         'password': 'abc123',
     }
 
-    const template = await tests.parseTemplate('app', 'cache', template_path, template_version, variables)
+    const template = await utils.parseTemplate('app', 'cache', variables)
 
-    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_template.yml')
 
     expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
     expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
@@ -58,7 +57,7 @@ test("the redis 5 service works correctly when installed", async () => {
         'password': 'secret',
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables)
+    const service = await utils.installTemplate(null, variables)
 
     try {
 
@@ -79,7 +78,7 @@ test("the redis 5 service works correctly when installed", async () => {
         client.quit()
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await utils.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)
@@ -91,7 +90,7 @@ test("the redis 6 service works correctly when installed", async () => {
         'password': 'secret',
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables)
+    const service = await utils.installTemplate(null, variables)
 
     try {
 
@@ -112,7 +111,7 @@ test("the redis 6 service works correctly when installed", async () => {
         client.quit()
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await utils.uninstallTemplate(service)
     }
 
 }, 1000 * 60 * 3)

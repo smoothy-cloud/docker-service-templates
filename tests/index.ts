@@ -7,33 +7,46 @@ import UninstallTemplate from './templates/UninstallTemplate'
 import ApiError from '@/api/ApiError'
 import { Service, Template, Variables } from '@/types'
 
-export function parseYamlFile(file_path: string): any {
-    return YAML.parse(fs.readFileSync(file_path).toString())
-}
+export default class TemplateTests {
 
-export async function parseTemplate(
-    application_slug: string, service_id: string, template_path: string, template_version: string, 
-    variables: Variables = {}, environment: Variables = {}
-): Promise<Template> {
-    return await (new ParseTemplate).execute(
-        application_slug, service_id, template_path, template_version, variables, environment
-    )
-}
+    template_path: string
 
-export async function validateTemplate(template_path: string): Promise<ApiError|null> {
-    return await (new ValidateTemplate).execute(template_path)
-}
+    constructor(template_path: string) {
+        this.template_path = template_path
+    }
 
-export async function installTemplate(
-    code_repository_path: string|null, template_path: string, template_version: string, variables: Variables = {}, 
-    environment: Variables = {}, initialization_time_in_seconds: number = 10
-): Promise<Service> {
-    return await (new InstallTemplate).execute(
-        code_repository_path, template_path, template_version, variables, environment,
-        initialization_time_in_seconds
-    )
-}
+    parseYamlFile(file_path: string): any
+    {
+        return YAML.parse(fs.readFileSync(file_path).toString())
+    }
+    
+    async parseTemplate(
+        application_slug: string, service_id: string, variables: Variables = {}, environment: Variables = {}
+    ): Promise<Template>
+    {
+        return await (new ParseTemplate).execute(
+            application_slug, service_id, this.template_path, 'latest', variables, environment
+        )
+    }
+    
+    async validateTemplate(): Promise<ApiError|null>
+    {
+        return await (new ValidateTemplate).execute(this.template_path)
+    }
+    
+    async installTemplate(
+        code_repository_path: string|null, variables: Variables = {}, environment: Variables = {}, 
+        initialization_time_in_seconds: number = 10
+    ): Promise<Service>
+    {
+        return await (new InstallTemplate).execute(
+            code_repository_path, this.template_path, 'latest', variables, environment, initialization_time_in_seconds
+        )
+    }
+    
+    async uninstallTemplate(service: Service): Promise<void>
+    {
+        return await (new UninstallTemplate).execute(service)
+    }
 
-export async function uninstallTemplate(service: Service): Promise<void> {
-    return await (new UninstallTemplate).execute(service)
 }

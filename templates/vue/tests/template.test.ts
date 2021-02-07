@@ -1,13 +1,13 @@
-import * as tests from 'tests'
+import TemplateUtils from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
 import 'jest-extended'
 
-const template_path = path.resolve(__dirname, '../')
+const utils = new TemplateUtils(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
+    const error = await utils.validateTemplate()
 
     expect(error).toBe(null)
 
@@ -18,7 +18,7 @@ test('the template cannot be parsed without package_manager and build_script', a
     let thrown_error
 
     try {
-        await tests.parseTemplate('app', 'website', template_path, '1.0.0')
+        await utils.parseTemplate('app', 'website')
     } catch (error) {
         thrown_error = error
     }
@@ -42,9 +42,9 @@ describe('the template can be parsed', () => {
             'build_script': "npm run build\nnpm run optimize"
         }
         
-        const template = await tests.parseTemplate('app', 'website', template_path, '1.0.0', variables)
+        const template = await utils.parseTemplate('app', 'website', variables)
     
-        const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/npm.yml')
+        const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_templates/npm.yml')
     
         expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
         expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
@@ -60,9 +60,9 @@ describe('the template can be parsed', () => {
             'build_script': "yarn run build"
         }
         
-        const template = await tests.parseTemplate('app', 'website', template_path, '1.0.0', variables)
+        const template = await utils.parseTemplate('app', 'website', variables)
     
-        const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/yarn.yml')
+        const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_templates/yarn.yml')
     
         expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
         expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
@@ -84,7 +84,7 @@ describe("the service works correctly when installed", () => {
             'build_script': "npm run build"
         }
 
-        const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', variables)
+        const service = await utils.installTemplate(code_repository_path, variables)
 
         try {
 
@@ -103,7 +103,7 @@ describe("the service works correctly when installed", () => {
             await expect(await page.content()).toContain('Oops, page not found!')
 
         } finally {
-            await tests.uninstallTemplate(service)
+            await utils.uninstallTemplate(service)
         }
 
     }, 1000 * 60 * 3)
@@ -118,7 +118,7 @@ describe("the service works correctly when installed", () => {
             'build_script': "yarn run build"
         }
 
-        const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', variables)
+        const service = await utils.installTemplate(code_repository_path, variables)
 
         try {
 
@@ -137,7 +137,7 @@ describe("the service works correctly when installed", () => {
             await expect(await page.content()).toContain('Oops, page not found!')
 
         } finally {
-            await tests.uninstallTemplate(service)
+            await utils.uninstallTemplate(service)
         }
 
     }, 1000 * 60 * 3)
