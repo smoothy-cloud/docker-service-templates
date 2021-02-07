@@ -10,7 +10,8 @@ files:
     WORKDIR /app/services/laravel/
 
     COPY code-repository/services/laravel/package*.json /app/services/laravel/
-    RUN npm install --silent
+    RUN npm config set loglevel "error" \
+     && npm install
 
     COPY code-repository/services/laravel/ /app/services/laravel/
 

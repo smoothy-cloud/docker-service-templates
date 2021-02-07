@@ -1,15 +1,12 @@
 import TemplateUtils from 'tests'
 import path from 'path'
-import 'jest-extended'
 import mysql from 'mysql2'
 
 const utils = new TemplateUtils(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await utils.validateTemplate()
-
-    expect(error).toBe(null)
+    await utils.assertThatTheTemplateSyntaxIsValid()
 
 })
 
@@ -26,12 +23,11 @@ test('the template can be parsed', async () => {
         ]
     }
 
-    const template = await utils.parseTemplate('app', 'database', variables)
+    const actual_template = await utils.parseTemplate('app', 'database', variables)
 
-    const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_template.yml')
+    const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_template.yml')
 
-    expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
-    expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
+    utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
 })
 

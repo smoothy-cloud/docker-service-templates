@@ -1,15 +1,12 @@
 import TemplateUtils from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
-import 'jest-extended'
 
 const utils = new TemplateUtils(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await utils.validateTemplate()
-
-    expect(error).toBe(null)
+    await utils.assertThatTheTemplateSyntaxIsValid()
 
 })
 
@@ -42,13 +39,11 @@ describe('the template can be parsed', () => {
             'build_script': "npm run build\nnpm run optimize"
         }
         
-        const template = await utils.parseTemplate('app', 'website', variables)
+        const actual_template = await utils.parseTemplate('app', 'website', variables)
     
-        const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_templates/npm.yml')
+        const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_templates/npm.yml')
     
-        expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
-        expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
-        expect(template.files).toMatchObject(expected_template.files)
+        utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
     })
   
@@ -60,13 +55,11 @@ describe('the template can be parsed', () => {
             'build_script': "yarn run build"
         }
         
-        const template = await utils.parseTemplate('app', 'website', variables)
+        const actual_template = await utils.parseTemplate('app', 'website', variables)
     
-        const expected_template = utils.parseYamlFile(__dirname+'/concerns/parsed_templates/yarn.yml')
+        const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_templates/yarn.yml')
     
-        expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
-        expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
-        expect(template.files).toMatchObject(expected_template.files)
+        utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
     })
   

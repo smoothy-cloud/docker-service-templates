@@ -1,4 +1,9 @@
-files: []
+files:
+  initialize_mysql.sql: |
+    CREATE DATABASE IF NOT EXISTS `gaming_platform`;
+    GRANT ALL PRIVILEGES ON `gaming_platform`.* TO 'johndoe'@'%';
+    CREATE DATABASE IF NOT EXISTS `platform-backups`;
+    GRANT ALL PRIVILEGES ON `platform-backups`.* TO 'johndoe'@'%';
 template:
   deployment:
 

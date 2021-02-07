@@ -4,8 +4,8 @@ import ParseTemplate from './templates/ParseTemplate'
 import ValidateTemplate from './templates/ValidateTemplate'
 import InstallTemplate from './templates/InstallTemplate'
 import UninstallTemplate from './templates/UninstallTemplate'
-import ApiError from '@/api/ApiError'
 import { Service, Template, Variables } from '@/types'
+import 'jest-extended'
 
 export default class TemplateTests {
 
@@ -15,7 +15,7 @@ export default class TemplateTests {
         this.template_path = template_path
     }
 
-    parseYamlFile(file_path: string): any
+    readParsedTemplateFile(file_path: string): any
     {
         return YAML.parse(fs.readFileSync(file_path).toString())
     }
@@ -28,10 +28,31 @@ export default class TemplateTests {
             application_slug, service_id, this.template_path, 'latest', variables, environment
         )
     }
-    
-    async validateTemplate(): Promise<ApiError|null>
+
+    assertThatTemplatesAreEqual(actual_template: Template, expected_template: Template): void
     {
-        return await (new ValidateTemplate).execute(this.template_path)
+        if(expected_template?.template?.deployment) {
+            expect(actual_template?.template?.deployment || []).toIncludeAllMembers(expected_template.template.deployment)
+        }
+
+        if(expected_template?.template?.interface?.volumes) {
+            expect(actual_template?.template?.interface?.volumes || []).toIncludeAllMembers(expected_template.template.interface.volumes)
+        }
+
+        if(expected_template?.template?.interface?.logs) {
+            expect(actual_template?.template?.interface?.logs || []).toIncludeAllMembers(expected_template.template.interface.logs)
+        }
+
+        if(expected_template?.files) {
+            expect(actual_template?.files || {}).toMatchObject(expected_template.files)
+        }
+    }
+    
+    async assertThatTheTemplateSyntaxIsValid(): Promise<void>
+    {
+        const error =  await (new ValidateTemplate).execute(this.template_path)
+
+        expect(error).toBe(null)
     }
     
     async installTemplate(
