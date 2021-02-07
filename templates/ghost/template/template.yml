@@ -1,0 +1,206 @@
+api: v1
+
+meta:
+  icon: ghost
+  name: Ghost
+  baseline: A free and open source blogging platform.
+  description: >
+    Ghost is a free and open source blogging platform, designed to simplify the process of
+    online publishing for individual bloggers as well as online publications.
+  categories:
+    - blogging
+  requirements:
+    - title: MySQL application
+      description: >
+        Ghost stores its data in either a MySQL database or an SQLite database. If you want to use the MySQL option,
+        you first need to install a MySQL application.
+    - title: Domain name
+      description: >
+        To correctly generate links to your publications, Ghost requires you to specify the URL over which you
+        will serve your Ghost application. For example: <code>https://blog.tesla.com</code>. You will be able
+        to change this URL later on.
+form:
+  - title: General
+    questions:
+      - variable: ghost_version
+        label: Ghost version
+        hint: >
+          Select the version of Ghost that you wish to install.
+        required: true
+        type: select
+        options:
+        - value: 3
+          label: 3
+        immutable: true
+      - variable: ghost_url
+        label: Ghost URL
+        hint: >
+          To correctly generate links to your publications, Ghost requires you to specify the URL over which you
+          will serve your Ghost application. For example: <code>https://blog.tesla.com</code>. You will be able
+          to change this URL later on.
+        required: true
+        type: url
+  - title: Database
+    questions:
+      - variable: database_type
+        label: Database type
+        hint: >
+          Ghost stores its data in either a MySQL database or an SQLite database. For blogs with little traffic,
+          SQLite is a great low cost solution. For blogs with lots of visitors, the MySQL option is recommended.
+        required: true
+        type: select
+        options:
+        - value: mysql
+          label: MySQL
+        - value: sqlite3
+          label: SQLite
+      - variable: database_host
+        label: MySQL host
+        hint: >
+          Specify the host of the MySQL database that your Ghost application should use to store its data.
+        type: string
+        required: true
+        if: "{{ variable.database_type == 'mysql' }}"
+      - variable: database_port
+        label: MySQL port
+        hint: >
+          Specify the port of the MySQL database that your Ghost application should use to store its data.
+        type: integer
+        required: true
+        if: "{{ variable.database_type == 'mysql' }}"
+      - variable: database_user
+        label: MySQL user
+        hint: >
+          Specify the user of the MySQL database that your Ghost application should use to store its data.
+        type: string
+        required: true
+        if: "{{ variable.database_type == 'mysql' }}"
+      - variable: database_password
+        label: MySQL password
+        hint: >
+          Specify the password of the MySQL database that your Ghost application should use to store its data.
+        type: password
+        required: true
+        if: "{{ variable.database_type == 'mysql' }}"
+      - variable: database_name
+        label: Database name
+        hint: >
+          Specify the name of the SQL database that your application should use to store its data. Make sure that the
+          database exists before installing your application.
+        type: string
+        required: true
+        if: "{{ variable.database_type == 'mysql' }}"
+  - title: Email
+    description: >
+      In order for Ghost to be able to send emails such as lost password and user invite emails, or member signup
+      emails if you're running a membership publication with Ghost, you need to set up an integration with an
+      external mail service. You can learn more about this topic in the mail section of
+      <a href="https://ghost.org/docs/concepts/config/#mail" target="_blank">the Ghost documentation</a>.
+    questions:
+      - variable: smtp_service
+        label: SMTP service
+        hint: >
+          Specify the SMTP serivice that Ghost may use to send its emails. For more information
+          about the supported services, you can check out the
+          <a href="https://ghost.org/docs/concepts/config/#mail" target="_blank">the Ghost documentation</a>.
+          If you use a <a href="https://github.com/nodemailer/nodemailer/tree/0.7/#well-known-services-for-smtp"
+          target="_blank">well known SMTP service</a>, you may not need to enter the hostname or port number.
+        type: string
+      - variable: smtp_host
+        label: SMTP host
+        hint: >
+          Specify the host of the SMTP serivice that Ghost may use to send its emails.
+        type: string
+      - variable: smtp_port
+        label: SMTP port
+        hint: >
+          Specify the port of the SMTP serivice that Ghost may use to send its emails.
+        type: integer
+      - variable: smtp_user
+        label: SMTP user
+        hint: >
+          Specify the user of the SMTP serivice that Ghost may use to send its emails.
+        type: string
+      - variable: smtp_password
+        label: SMTP password
+        hint: >
+          Specify the password of the SMTP serivice that Ghost may use to send its emails.
+        type: password
+      - variable: smtp_from_address
+        label: SMTP from address
+        hint: >
+          By default the 'from' address for mail sent from Ghost is set to the title of your
+          publication, for example <code>noreply@your-publication.com</code>. You can override
+          this to something more suitable.
+        type: email
+
+deployment:
+  - resource: volume
+    name: ghost_data
+  - resource: container
+    name: ghost
+    image:
+      switch:
+        - case: "{{ variable.ghost_version == 3 }}"
+          value: ghost:3
+    volume_mounts:
+      - volume: "{* volume.ghost_data *}"
+        mount_path: /var/lib/ghost/content
+    environment:
+      # general
+      - key: url
+        value: "{{ variable.ghost_url }}"
+      # database
+      - key: database__client
+        value: "{{ variable.database_type }}"
+      # sqlite
+      - key: database__connection__filename
+        value: content/data/ghost.db
+        if: "{{ variable.database_type == 'sqlite3' }}"
+      # mysql
+      - key: database__connection__host
+        value: "{{ variable.database_host }}"
+        if: "{{ variable.database_type == 'mysql' }}"
+      - key: database__connection__port
+        value: "{{ variable.database_port }}"
+        if: "{{ variable.database_type == 'mysql' }}"
+      - key: database__connection__user
+        value: "{{ variable.database_user }}"
+        if: "{{ variable.database_type == 'mysql' }}"
+      - key: database__connection__password
+        value: "{{ variable.database_password }}"
+        if: "{{ variable.database_type == 'mysql' }}"
+      - key: database__connection__database
+        value: "{{ variable.database_name }}"
+        if: "{{ variable.database_type == 'mysql' }}"
+      # mail
+      - key: mail__options__service
+        value: "{{ variable.smtp_service }}"
+      - key: mail__options__host
+        value: "{{ variable.smtp_host }}"
+      - key: mail__options__port
+        value: "{{ variable.smtp_port }}"
+      - key: mail__options__auth__user
+        value: "{{ variable.smtp_user }}"
+      - key: mail__options__auth__pass
+        value: "{{ variable.smtp_password }}"
+      - key: mail__options__from
+        value: "{{ variable.smtp_from_address }}"
+      # logging
+      - key: logging__level
+        value: error
+    memory: 512
+    cpus: 500
+  - resource: entrypoint
+    name: ghost
+    title: Ghost
+    container: "{* container.ghost *}"
+    port: 2368
+
+interface:
+  volumes:
+    - title: Ghost data
+      volume: "{* volume.ghost_data *}"
+  logs:
+    - title: Ghost logs
+      container: "{* container.ghost *}"
