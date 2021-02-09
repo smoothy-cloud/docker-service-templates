@@ -1,14 +1,14 @@
-import TemplateUtils from 'tests'
+import { Template, utils } from 'tests'
 import path from 'path'
 import Docker from 'dockerode'
 import { Service } from '@/types'
 
-const utils = new TemplateUtils(path.resolve(__dirname, '../'))
-const redis_utils = new TemplateUtils(path.resolve(__dirname, '../../redis'))
+const laravel_template = new Template(path.resolve(__dirname, '../'))
+const redis_template = new Template(path.resolve(__dirname, '../../redis'))
 
 test('the template is valid', async () => {
 
-    await utils.assertThatTheTemplateSyntaxIsValid()
+    await laravel_template.assertThatSyntaxIsValid()
 
 })
 
@@ -49,7 +49,7 @@ test('the template can be parsed', async () => {
         'APP_DEBUG': false,
     }
 
-    const actual_template = await utils.parseTemplate('app', 'backend', variables, environment)
+    const actual_template = await laravel_template.parse('app', 'backend', variables, environment)
 
     const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_template.yml')
 
@@ -82,7 +82,7 @@ test("the service works correctly when installed", async () => {
         'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan migrate --force\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link'
     }
 
-    const redis_service = await redis_utils.installTemplate(null, { 'version': '6', 'password': 'abc123' })
+    const redis_service = await redis_template.install(null, { 'version': '6', 'password': 'abc123' })
 
     const environment = {
         'APP_KEY': 'base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=',
@@ -93,7 +93,7 @@ test("the service works correctly when installed", async () => {
         'REDIS_PORT': redis_service.entrypoints.redis,
     }
 
-    const laravel_service = await utils.installTemplate(code_repository_path, variables, environment)
+    const laravel_service = await laravel_template.install(code_repository_path, variables, environment)
 
     try {
 
@@ -106,8 +106,8 @@ test("the service works correctly when installed", async () => {
         await assertThatQueuedJobsAreExecuted(host, laravel_service)
 
     } finally {
-        await utils.uninstallTemplate(laravel_service)
-        await utils.uninstallTemplate(redis_service)
+        await laravel_template.uninstall()
+        await redis_template.uninstall()
     }
 
 }, 1000 * 60 * 5)
@@ -169,22 +169,17 @@ async function assertThatQueuedJobsAreExecuted(host: string, service: Service): 
 {
     const resources = service.template.template.deployment
 
-    const laravel_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'laravel')?.id
     const daemon_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'daemon_0')?.id
 
-    if(! laravel_container_id) fail()
     if(! daemon_container_id) fail()
 
-    const laravel_container = await new Docker().getContainer(laravel_container_id)
     const daemon_container = await new Docker().getContainer(daemon_container_id)
 
     await page.goto(`${host}/job`)
 
     await utils.sleep(5)
 
-    const logs_1 = await laravel_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
-    const logs_2 = await daemon_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
+    const logs = await daemon_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
 
-    console.log(logs_1.toString())
-    console.log(logs_2.toString())
+    expect(logs.toString()).toContain('production.NOTICE: Queued job executed.')
 }

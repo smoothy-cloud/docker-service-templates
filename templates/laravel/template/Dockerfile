@@ -62,8 +62,7 @@ COPY --from=asset-stage {{ path('/app/', variable.path_to_source_code, '/public'
 
 RUN chown -R smoothy:smoothy /var/www/html \
  && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/storage') }} \
- && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/bootstrap/cache') }} \
- && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/database') }}
+ && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/bootstrap/cache') }}
 
 WORKDIR {{ path('/var/www/html/', variable.path_to_source_code) }}
 

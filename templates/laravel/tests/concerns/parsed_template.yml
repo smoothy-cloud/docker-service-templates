@@ -35,16 +35,13 @@ files:
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-    COPY run_scheduler /etc/cron.d/run_scheduler
-    RUN crontab /etc/cron.d/run_scheduler
-
     COPY code-repository/services/laravel/ /var/www/html/services/laravel/
 
     COPY code-repository/libraries/ui-components/  /var/www/html/libraries/ui-components/
 
     COPY --from=asset-stage /app/services/laravel/public /var/www/html/services/laravel/public
 
-    RUN chown -R www-data:smoothy /var/www/html \
+    RUN chown -R smoothy:smoothy /var/www/html \
      && chmod -R 775 /var/www/html/services/laravel/storage \
      && chmod -R 775 /var/www/html/services/laravel/bootstrap/cache
 
@@ -55,9 +52,10 @@ files:
     ARG PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
     RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_0 $PRIVATE_COMPOSER_REGISTRY_USERNAME_0 $PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
 
-    RUN composer install --quiet --ignore-platform-reqs --no-interaction --prefer-dist
+    RUN composer install --ignore-platform-reqs --no-dev --no-interaction --prefer-dist
 
-    COPY run.sh /entrypoints/run.sh
+    COPY --chown=smoothy:smoothy run.sh /entrypoints/run.sh
+    COPY --chown=smoothy:smoothy scheduler.sh /scheduler.sh
   run.sh: |
     #!/bin/bash
 
@@ -71,11 +69,14 @@ files:
     php artisan migrate --force
     rm public/storage
     php artisan storage:link
+  scheduler.sh: |-
+    #!/bin/bash
 
-    cron
-  run_scheduler: |-
-    * * * * * /usr/local/bin/php /var/www/html/services/laravel/artisan schedule:run > /proc/1/fd/1 2> /proc/1/fd/2
-    # An empty line is required at the end of this file for a valid cron file.
+    while [ true ]
+    do
+        /usr/local/bin/php /var/www/html/services/laravel/artisan schedule:run &
+        sleep 60
+    done
   server.conf: |-
     server {
         listen 8080;
@@ -246,6 +247,25 @@ template:
       name: daemon_0
       image: app_service_backend_image_laravel
       command: php artisan horizon
+      volume_mounts:
+        - volume: app_service_backend_volume_laravel_data
+          mount_path: /var/www/html
+      environment:
+        - key: APP_KEY
+          value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
+        - key: APP_ENV
+          value: production
+        - key: APP_DEBUG
+          value: false
+        - key: TIMEZONE
+          value: Europe/Brussels
+      memory: 256
+      cpus: 250
+    - resource: container
+      id: app_service_backend_container_scheduler
+      name: scheduler
+      image: app_service_backend_image_laravel
+      command: bash /scheduler.sh
       volume_mounts:
         - volume: app_service_backend_volume_laravel_data
           mount_path: /var/www/html
