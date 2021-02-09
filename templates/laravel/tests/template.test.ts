@@ -4,6 +4,7 @@ import Docker from 'dockerode'
 import { Service } from '@/types'
 
 const utils = new TemplateUtils(path.resolve(__dirname, '../'))
+const redis_utils = new TemplateUtils(path.resolve(__dirname, '../../redis'))
 
 test('the template is valid', async () => {
 
@@ -81,28 +82,35 @@ test("the service works correctly when installed", async () => {
         'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan migrate --force\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link'
     }
 
+    const redis_service = await redis_utils.installTemplate(null, { 'version': '6', 'password': 'abc123' })
+
     const environment = {
         'APP_KEY': 'base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=',
         'APP_ENV': 'production',
         'APP_DEBUG': false,
+        'REDIS_HOST': 'host.docker.internal',
+        'REDIS_PASSWORD': 'abc123',
+        'REDIS_PORT': redis_service.entrypoints.redis,
     }
 
-    const service = await utils.installTemplate(code_repository_path, variables, environment)
+    const laravel_service = await utils.installTemplate(code_repository_path, variables, environment)
 
     try {
 
-        const host = `http://localhost:${service.entrypoints.laravel_service}`
+        const host = `http://localhost:${laravel_service.entrypoints.laravel_service}`
 
         await assertThatHomepageCanBeVisited(host)
         await assertThatPhpinfoShowsTheExpectedConfiguration(host)
-        await assertThatLogsAreWrittenToStdout(host, service)
-        await assertThatCronJobIsExecuted(service)
+        await assertThatLogsAreWrittenToStdout(host, laravel_service)
+        await assertThatCronJobIsExecuted(laravel_service)
+        await assertThatQueuedJobsAreExecuted(host, laravel_service)
 
     } finally {
-        await utils.uninstallTemplate(service)
+        await utils.uninstallTemplate(laravel_service)
+        await utils.uninstallTemplate(redis_service)
     }
 
-}, 1000 * 60 * 4)
+}, 1000 * 60 * 5)
 
 async function assertThatHomepageCanBeVisited(host: string): Promise<void>
 {
@@ -155,4 +163,28 @@ async function assertThatCronJobIsExecuted(service: Service): Promise<void>
     const logs_1 = await scheduler_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
 
     expect(logs_1.toString()).toContain('production.NOTICE: Cron job executed.')
+}
+
+async function assertThatQueuedJobsAreExecuted(host: string, service: Service): Promise<void>
+{
+    const resources = service.template.template.deployment
+
+    const laravel_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'laravel')?.id
+    const daemon_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'daemon_0')?.id
+
+    if(! laravel_container_id) fail()
+    if(! daemon_container_id) fail()
+
+    const laravel_container = await new Docker().getContainer(laravel_container_id)
+    const daemon_container = await new Docker().getContainer(daemon_container_id)
+
+    await page.goto(`${host}/job`)
+
+    await utils.sleep(5)
+
+    const logs_1 = await laravel_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
+    const logs_2 = await daemon_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
+
+    console.log(logs_1.toString())
+    console.log(logs_2.toString())
 }
