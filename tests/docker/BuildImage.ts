@@ -6,7 +6,7 @@ import Docker from 'dockerode'
 import mkdirp from 'mkdirp'
 import rimraf from 'rimraf'
 import tarfs from 'tar-fs'
-import { Template, TemplateFiles, Image } from '@/types'
+import { ParsedTemplate, TemplateFiles, Image } from '@/types'
 
 interface ProgressEvent {
     error?: string;
@@ -22,7 +22,7 @@ class BuildImage
         this.docker = new Docker()
     }
 
-    async execute(code_repository_path: string, template: Template, image: Image): Promise<void>
+    async execute(code_repository_path: string, template: ParsedTemplate, image: Image): Promise<void>
     {
         const build_directory: Directory = tmp.dirSync()
 

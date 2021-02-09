@@ -1,7 +1,6 @@
 import { Template, utils } from 'tests'
 import path from 'path'
 import Docker from 'dockerode'
-import { Service } from '@/types'
 
 const laravel_template = new Template(path.resolve(__dirname, '../'))
 const redis_template = new Template(path.resolve(__dirname, '../../redis'))
@@ -82,7 +81,7 @@ test("the service works correctly when installed", async () => {
         'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan migrate --force\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link'
     }
 
-    const redis_service = await redis_template.install(null, { 'version': '6', 'password': 'abc123' })
+    await redis_template.install(null, { 'version': '6', 'password': 'abc123' })
 
     const environment = {
         'APP_KEY': 'base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=',
@@ -90,20 +89,20 @@ test("the service works correctly when installed", async () => {
         'APP_DEBUG': false,
         'REDIS_HOST': 'host.docker.internal',
         'REDIS_PASSWORD': 'abc123',
-        'REDIS_PORT': redis_service.entrypoints.redis,
+        'REDIS_PORT': redis_template.getEntrypoint('redis')?.host_port,
     }
 
-    const laravel_service = await laravel_template.install(code_repository_path, variables, environment)
+    await laravel_template.install(code_repository_path, variables, environment)
 
     try {
 
-        const host = `http://localhost:${laravel_service.entrypoints.laravel_service}`
+        const host = `http://localhost:${laravel_template.getEntrypoint('laravel_service')?.host_port}`
 
         await assertThatHomepageCanBeVisited(host)
         await assertThatPhpinfoShowsTheExpectedConfiguration(host)
-        await assertThatLogsAreWrittenToStdout(host, laravel_service)
-        await assertThatCronJobIsExecuted(laravel_service)
-        await assertThatQueuedJobsAreExecuted(host, laravel_service)
+        await assertThatLogsAreWrittenToStdout(host)
+        await assertThatCronJobIsExecuted()
+        await assertThatQueuedJobsAreExecuted(host)
 
     } finally {
         await laravel_template.uninstall()
@@ -130,10 +129,9 @@ async function assertThatPhpinfoShowsTheExpectedConfiguration(host: string): Pro
     await expect(html).toContain('<td class="e">date.timezone</td><td class="v">Europe/Brussels</td>')
 }
 
-async function assertThatLogsAreWrittenToStdout(host: string, service: Service): Promise<void>
+async function assertThatLogsAreWrittenToStdout(host: string): Promise<void>
 {
-    const resources = service.template.template.deployment
-    const laravel_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'laravel')?.id
+    const laravel_container_id = laravel_template.getContainer('laravel')?.id
 
     if(! laravel_container_id) fail()
 
@@ -151,10 +149,9 @@ async function assertThatLogsAreWrittenToStdout(host: string, service: Service):
     expect(logs_2.toString()).toContain("production.ERROR: Woops, something went wrong.")
 }
 
-async function assertThatCronJobIsExecuted(service: Service): Promise<void>
+async function assertThatCronJobIsExecuted(): Promise<void>
 {
-    const resources = service.template.template.deployment
-    const scheduler_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'scheduler')?.id
+    const scheduler_container_id = laravel_template.getContainer('scheduler')?.id
 
     if(! scheduler_container_id) fail()
 
@@ -165,11 +162,9 @@ async function assertThatCronJobIsExecuted(service: Service): Promise<void>
     expect(logs_1.toString()).toContain('production.NOTICE: Cron job executed.')
 }
 
-async function assertThatQueuedJobsAreExecuted(host: string, service: Service): Promise<void>
+async function assertThatQueuedJobsAreExecuted(host: string): Promise<void>
 {
-    const resources = service.template.template.deployment
-
-    const daemon_container_id = resources.find(resource => resource.resource === 'container' && resource.name === 'daemon_0')?.id
+    const daemon_container_id = laravel_template.getContainer('daemon_0')?.id
 
     if(! daemon_container_id) fail()
 

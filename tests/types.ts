@@ -7,7 +7,7 @@ export interface PrivateTemplateDetails {
     path?: string;
 }
 
-export interface PrivateTemplate extends Template {
+export interface PrivateTemplate extends ParsedTemplate {
     template_name: string;
     template_version: string;
 }
@@ -36,18 +36,12 @@ export interface VolumeInterface {
     //
 }
 
-export interface Service {
-    id: string
-    template: Template
-    entrypoints: Record<string, number>
-}
-
 export interface TemplateSpec {
     deployment: Resource[]
     interface: Interface
 }
 
-export interface Template {
+export interface ParsedTemplate {
     template: TemplateSpec;
     files: TemplateFiles;
 }
@@ -109,5 +103,5 @@ export interface Entrypoint {
     resource: "entrypoint";
     container: string;
     port: number;
-    host_port: number;
+    host_port?: number;
 }

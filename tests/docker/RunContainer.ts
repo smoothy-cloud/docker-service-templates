@@ -1,5 +1,4 @@
 import Docker from 'dockerode'
-import path from 'path'
 import { DirResult as Directory } from 'tmp'
 import { Container, Entrypoint } from '@/types'
 
@@ -14,7 +13,7 @@ class RunContainer
         this.docker = new Docker()
     }
 
-    async execute(directory: Directory, service_id: string, entrypoints: Entrypoint[], container: Container)
+    async execute(directory: Directory, container: Container, entrypoints: Entrypoint[])
     {
         const docker_containers = await this.docker.listContainers()
         const container_exists = docker_containers.flatMap(container => container.Names).includes(container.id)
@@ -34,8 +33,7 @@ class RunContainer
         }
 
         for(const config_file_mount of config_file_mounts) {
-            const local_path = path.join(directory.name, `services/${service_id}/${config_file_mount.config_file}`)
-            binds.push(`${local_path}:${config_file_mount.mount_path}`)
+            binds.push(`${directory.name}/${config_file_mount.config_file}:${config_file_mount.mount_path}`)
         }
 
         const port_bindings: PortBindings = {}

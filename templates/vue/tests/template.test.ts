@@ -1,12 +1,12 @@
-import TemplateUtils from 'tests'
+import { Template, utils } from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
 
-const utils = new TemplateUtils(path.resolve(__dirname, '../'))
+const vue_template = new Template(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    await utils.assertThatTheTemplateSyntaxIsValid()
+    await vue_template.assertThatSyntaxIsValid()
 
 })
 
@@ -15,7 +15,7 @@ test('the template cannot be parsed without package_manager and build_script', a
     let thrown_error
 
     try {
-        await utils.parseTemplate('app', 'website')
+        await vue_template.parse('app', 'website')
     } catch (error) {
         thrown_error = error
     }
@@ -39,7 +39,7 @@ describe('the template can be parsed', () => {
             'build_script': "npm run build\nnpm run optimize"
         }
         
-        const actual_template = await utils.parseTemplate('app', 'website', variables)
+        const actual_template = await vue_template.parse('app', 'website', variables)
     
         const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_templates/npm.yml')
     
@@ -55,7 +55,7 @@ describe('the template can be parsed', () => {
             'build_script': "yarn run build"
         }
         
-        const actual_template = await utils.parseTemplate('app', 'website', variables)
+        const actual_template = await vue_template.parse('app', 'website', variables)
     
         const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_templates/yarn.yml')
     
@@ -77,11 +77,11 @@ describe("the service works correctly when installed", () => {
             'build_script': "npm run build"
         }
 
-        const service = await utils.installTemplate(code_repository_path, variables)
+        await vue_template.install(code_repository_path, variables)
 
         try {
 
-            const host = `http://localhost:${service.entrypoints.vue_service}`
+            const host = `http://localhost:${vue_template.getEntrypoint('vue_service')?.host_port}`
 
             await page.goto(`${host}/`)
             await expect(await page.url()).toEqual(`${host}/`)
@@ -96,7 +96,7 @@ describe("the service works correctly when installed", () => {
             await expect(await page.content()).toContain('Oops, page not found!')
 
         } finally {
-            await utils.uninstallTemplate(service)
+            await vue_template.uninstall()
         }
 
     }, 1000 * 60 * 3)
@@ -111,11 +111,11 @@ describe("the service works correctly when installed", () => {
             'build_script': "yarn run build"
         }
 
-        const service = await utils.installTemplate(code_repository_path, variables)
+        await vue_template.install(code_repository_path, variables)
 
         try {
 
-            const host = `http://localhost:${service.entrypoints.vue_service}`
+            const host = `http://localhost:${vue_template.getEntrypoint('vue_service')?.host_port}`
 
             await page.goto(`${host}/`)
             await expect(await page.url()).toEqual(`${host}/`)
@@ -130,7 +130,7 @@ describe("the service works correctly when installed", () => {
             await expect(await page.content()).toContain('Oops, page not found!')
 
         } finally {
-            await utils.uninstallTemplate(service)
+            await vue_template.uninstall()
         }
 
     }, 1000 * 60 * 3)

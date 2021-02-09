@@ -1,14 +1,12 @@
 import tmp, { DirResult as Directory } from 'tmp'
 import fs from 'fs'
-import mkdirp from 'mkdirp'
-import path from 'path'
 import ParseTemplate from '@/templates/ParseTemplate'
 import UninstallTemplate from '@/templates/UninstallTemplate'
 import BuildImage from '@/docker/BuildImage'
 import CreateNetwork from '@/docker/CreateNetwork'
 import CreateVolume from '@/docker/CreateVolume'
 import RunContainer from '@/docker/RunContainer'
-import { Service, Volume, Image, Entrypoint, ConfigFile, Template, Variables } from '@/types'
+import { Volume, Image, Entrypoint, ConfigFile, ParsedTemplate, Variables } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
 tmp.setGracefulCleanup()
@@ -25,7 +23,7 @@ export class InstallTemplate
     async execute(
         code_repository_path: string|null, template_path: string, template_version: string, variables: Variables, 
         environment: Variables, initialization_time_in_seconds: number
-    ): Promise<Service>
+    ): Promise<ParsedTemplate>
     {
         const application_slug = uuidv4().substring(0, 8)
         const service_id = uuidv4().substring(0, 8)
@@ -33,29 +31,23 @@ export class InstallTemplate
             application_slug, service_id, template_path, template_version, variables, environment
         )
 
-        let service = {
-            id: service_id,
-            template: template,
-            entrypoints: {},
-        }
-
         try {
             await new CreateNetwork().execute('smoothy')
             await this.buildImages(code_repository_path, template)
             await this.createVolumes(template)
-            await this.createConfigFiles(service_id, template)
-            service.entrypoints = await this.runContainers(service_id, template)
+            await this.createConfigFiles(template)
+            await this.runContainers(template)
         } catch (error) {
-            (new UninstallTemplate).execute(service)
+            (new UninstallTemplate).execute(template)
             throw error
         }
 
         await new Promise(resolve => setTimeout(resolve, 1000 * initialization_time_in_seconds))
 
-        return service
+        return template
     }
 
-    async buildImages(code_repository_path: string|null, template: Template): Promise<void>
+    async buildImages(code_repository_path: string|null, template: ParsedTemplate): Promise<void>
     {
         const images: Image[] = []
 
@@ -75,7 +67,7 @@ export class InstallTemplate
         }
     }
 
-    async createVolumes(template: Template): Promise<void>
+    async createVolumes(template: ParsedTemplate): Promise<void>
     {
         const volumes: Volume[] = []
 
@@ -91,7 +83,7 @@ export class InstallTemplate
         }
     }
 
-    async createConfigFiles(service_id: string, template: Template): Promise<void>
+    async createConfigFiles(template: ParsedTemplate): Promise<void>
     {
         const config_files: ConfigFile[] = []
 
@@ -102,23 +94,18 @@ export class InstallTemplate
 
         if(config_files.length === 0) return
 
-        const folder_path = path.join(this.directory.name, `services/${service_id}`)
-            
-        mkdirp.sync(folder_path)
-
         for(const config_file of config_files) {
-            fs.writeFileSync(`${folder_path}/${config_file.id}`, config_file.contents)
+            fs.writeFileSync(`${this.directory.name}/${config_file.id}`, config_file.contents)
         }
     }
 
-    async runContainers(service_id: string, template: Template): Promise<Record<string, number>>
+    async runContainers(template: ParsedTemplate): Promise<void>
     {
         const entrypoints: Entrypoint[] = []
-        const entrypoint_host_port_mapping: Record<string, number> = {}
 
         template.template.deployment.forEach(resource => {
 
-            if(resource.resource !== 'entrypoint') return null
+            if(resource.resource !== 'entrypoint') return
 
             const min_port = 50000
             const max_port = 65353
@@ -128,19 +115,15 @@ export class InstallTemplate
 
             entrypoints.push(resource)
 
-            entrypoint_host_port_mapping[resource.name] = resource.host_port
-
         })
 
         for(const resource of template.template.deployment) {
 
             if(resource.resource !== 'container') continue
 
-            await new RunContainer().execute(this.directory, service_id, entrypoints, resource)
+            await new RunContainer().execute(this.directory, resource, entrypoints)
 
         }
-
-        return entrypoint_host_port_mapping
     }
 }
 

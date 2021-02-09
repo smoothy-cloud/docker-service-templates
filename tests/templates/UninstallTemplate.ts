@@ -4,23 +4,23 @@
 import DeleteImage from '@/docker/DeleteImage'
 import DeleteVolume from '@/docker/DeleteVolume'
 import DeleteContainer from '@/docker/DeleteContainer'
-import { Service } from '@/types'
+import { ParsedTemplate } from '@/types'
 
 export class UninstallTemplate
 {
-    async execute(service: Service): Promise<void>
+    async execute(template: ParsedTemplate): Promise<void>
     {
-        await this.deleteContainers(service)
-        // await this.deleteConfigFiles(service)
-        await this.deleteVolumes(service)
-        await this.deleteImages(service)
+        await this.deleteContainers(template)
+        // await this.deleteConfigFiles(template)
+        await this.deleteVolumes(template)
+        await this.deleteImages(template)
     }
 
-    async deleteContainers(service: Service): Promise<void>
+    async deleteContainers(template: ParsedTemplate): Promise<void>
     {
         const promises: Promise<void>[] = []
 
-        service.template.template.deployment.forEach(resource => {
+        template.template.deployment.forEach(resource => {
 
             if(resource.resource !== 'container') return
 
@@ -42,11 +42,11 @@ export class UninstallTemplate
     }
     */
 
-    async deleteVolumes(service: Service): Promise<void>
+    async deleteVolumes(template: ParsedTemplate): Promise<void>
     {
         const promises: Promise<void>[] = []
 
-        service.template.template.deployment.forEach(resource => {
+        template.template.deployment.forEach(resource => {
             
             if(resource.resource !== 'volume') return
             
@@ -57,11 +57,11 @@ export class UninstallTemplate
         await Promise.all(promises)
     }
 
-    async deleteImages(service: Service): Promise<void>
+    async deleteImages(template: ParsedTemplate): Promise<void>
     {
         const promises: Promise<void>[] = []
 
-        service.template.template.deployment.forEach(resource => {
+        template.template.deployment.forEach(resource => {
             
             if(resource.resource !== 'image') return
             
