@@ -22,7 +22,7 @@ class RunContainer
         if(container_exists) return
 
         const image = container.image
-        const command = container.command || []
+        const command = container.command
         const environment = container.environment || []
         const volume_mounts = container.volume_mounts || []
         const config_file_mounts = container.config_file_mounts || []
@@ -56,8 +56,8 @@ class RunContainer
             }
         }
 
-        if(command.length > 0) {
-            config.Cmd = command.map(command => command.part)
+        if(command && typeof command === 'string') {
+            config.Cmd = command
         }
         
         const docker_container: Docker.Container = await this.docker.createContainer(config)

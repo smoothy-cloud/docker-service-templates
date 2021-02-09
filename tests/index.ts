@@ -70,4 +70,9 @@ export default class TemplateTests {
         return await (new UninstallTemplate).execute(service)
     }
 
+    async sleep(seconds: number): Promise<void>
+    {
+        await new Promise(resolve => setTimeout(resolve, 1000 * seconds))
+    }
+
 }

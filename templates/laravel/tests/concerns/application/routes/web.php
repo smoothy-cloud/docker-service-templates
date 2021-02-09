@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,10 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/phpinfo', function () {
-    return phpinfo();
+Route::get('/', fn () => view('welcome'));
+Route::get('/phpinfo', fn () => phpinfo());
+Route::get('/log', fn () => Log::error('Woops, something went wrong.'));
+Route::get('/job', function () {
+    dispatch(fn () => Log::notice('Queued job executed.'));
+    return 'job pushed';
 });
