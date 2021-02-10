@@ -4,36 +4,107 @@ import ParseTemplate from './templates/ParseTemplate'
 import ValidateTemplate from './templates/ValidateTemplate'
 import InstallTemplate from './templates/InstallTemplate'
 import UninstallTemplate from './templates/UninstallTemplate'
-import ApiError from '@/api/ApiError'
-import { Service, Template, Variables } from '@/types'
+import { Container, Entrypoint, ParsedTemplate, Variables } from '@/types'
+import 'jest-extended'
 
-export function parseYamlFile(file_path: string): any {
-    return YAML.parse(fs.readFileSync(file_path).toString())
+export class Template {
+
+    template_path: string
+    parsed_template?: ParsedTemplate
+
+    constructor(template_path: string)
+    {
+        this.template_path = template_path
+    }
+    
+    async parse(
+        application_slug: string, service_id: string, variables: Variables = {}, environment: Variables = {}
+    ): Promise<ParsedTemplate>
+    {
+        return await (new ParseTemplate).execute(
+            application_slug, service_id, this.template_path, 'latest', variables, environment
+        )
+    }
+    
+    async assertThatSyntaxIsValid(): Promise<void>
+    {
+        const error =  await (new ValidateTemplate).execute(this.template_path)
+
+        expect(error).toBe(null)
+    }
+    
+    async install(
+        code_repository_path: string|null, variables: Variables = {}, environment: Variables = {}, 
+        initialization_time_in_seconds: number = 10
+    ): Promise<void>
+    {
+        this.parsed_template = await (new InstallTemplate).execute(
+            code_repository_path, this.template_path, 'latest', variables, environment, initialization_time_in_seconds
+        )
+    }
+    
+    getContainer(name: string): Container|null
+    {
+        if(! this.parsed_template) return null
+
+        for(const resource of this.parsed_template.template.deployment) {
+            if(resource.resource !== 'container') continue
+            if(resource.name === name) return resource
+        }
+
+        return null
+    }
+
+    getEntrypoint(name: string): Entrypoint|null
+    {
+        if(! this.parsed_template) return null
+
+        for(const resource of this.parsed_template.template.deployment) {
+            if(resource.resource !== 'entrypoint') continue
+            if(resource.name === name) return resource
+        }
+
+        return null
+    }
+
+    async uninstall(): Promise<void>
+    {
+        if(! this.parsed_template) return
+
+        return await (new UninstallTemplate).execute(this.parsed_template)
+    }
+
 }
 
-export async function parseTemplate(
-    application_slug: string, service_id: string, template_path: string, template_version: string, 
-    variables: Variables = {}, environment: Variables = {}
-): Promise<Template> {
-    return await (new ParseTemplate).execute(
-        application_slug, service_id, template_path, template_version, variables, environment
-    )
-}
+export const utils = {
 
-export async function validateTemplate(template_path: string): Promise<ApiError|null> {
-    return await (new ValidateTemplate).execute(template_path)
-}
+    readParsedTemplateFile: function(file_path: string): any
+    {
+        return YAML.parse(fs.readFileSync(file_path).toString())
+    },
 
-export async function installTemplate(
-    code_repository_path: string|null, template_path: string, template_version: string, variables: Variables = {}, 
-    environment: Variables = {}, initialization_time_in_seconds: number = 10
-): Promise<Service> {
-    return await (new InstallTemplate).execute(
-        code_repository_path, template_path, template_version, variables, environment,
-        initialization_time_in_seconds
-    )
-}
+    assertThatTemplatesAreEqual: function(actual_template: ParsedTemplate, expected_template: ParsedTemplate): void
+    {
+        if(expected_template?.template?.deployment) {
+            expect(actual_template?.template?.deployment || []).toIncludeAllMembers(expected_template.template.deployment)
+        }
 
-export async function uninstallTemplate(service: Service): Promise<void> {
-    return await (new UninstallTemplate).execute(service)
+        if(expected_template?.template?.interface?.volumes) {
+            expect(actual_template?.template?.interface?.volumes || []).toIncludeAllMembers(expected_template.template.interface.volumes)
+        }
+
+        if(expected_template?.template?.interface?.logs) {
+            expect(actual_template?.template?.interface?.logs || []).toIncludeAllMembers(expected_template.template.interface.logs)
+        }
+
+        if(expected_template?.files) {
+            expect(actual_template?.files || {}).toMatchObject(expected_template.files)
+        }
+    },
+
+    sleep: async function(seconds: number): Promise<void>
+    {
+        await new Promise(resolve => setTimeout(resolve, 1000 * seconds))
+    },
+
 }

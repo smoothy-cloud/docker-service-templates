@@ -1,5 +1,4 @@
 import Docker from 'dockerode'
-import path from 'path'
 import { DirResult as Directory } from 'tmp'
 import { Container, Entrypoint } from '@/types'
 
@@ -14,7 +13,7 @@ class RunContainer
         this.docker = new Docker()
     }
 
-    async execute(directory: Directory, service_id: string, entrypoints: Entrypoint[], container: Container)
+    async execute(directory: Directory, container: Container, entrypoints: Entrypoint[])
     {
         const docker_containers = await this.docker.listContainers()
         const container_exists = docker_containers.flatMap(container => container.Names).includes(container.id)
@@ -22,14 +21,7 @@ class RunContainer
         if(container_exists) return
 
         const image = container.image
-        const docker_images = await this.docker.listImages()
-        const image_exists = docker_images.flatMap(image => image.RepoTags).includes(image)
-
-        if(! image_exists) {
-            await this.docker.pull(image)
-        }
-
-        const command = container.command || []
+        const command = container.command
         const environment = container.environment || []
         const volume_mounts = container.volume_mounts || []
         const config_file_mounts = container.config_file_mounts || []
@@ -41,8 +33,7 @@ class RunContainer
         }
 
         for(const config_file_mount of config_file_mounts) {
-            const local_path = path.join(directory.name, `services/${service_id}/${config_file_mount.config_file}`)
-            binds.push(`${local_path}:${config_file_mount.mount_path}`)
+            binds.push(`${directory.name}/${config_file_mount.config_file}:${config_file_mount.mount_path}`)
         }
 
         const port_bindings: PortBindings = {}
@@ -63,8 +54,8 @@ class RunContainer
             }
         }
 
-        if(command.length > 0) {
-            config.Cmd = command.map(command => command.part)
+        if(command && typeof command === 'string') {
+            config.Cmd = command
         }
         
         const docker_container: Docker.Container = await this.docker.createContainer(config)

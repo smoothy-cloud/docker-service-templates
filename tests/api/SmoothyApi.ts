@@ -1,7 +1,7 @@
 import axios from 'axios'
 import FormData from 'form-data'
 import ApiError from '@/api/ApiError'
-import { Template, ImportedTemplate, Variables } from '@/types'
+import { ParsedTemplate, ImportedTemplate, Variables } from '@/types'
 
 export default class SmoothyApi {
 
@@ -36,8 +36,8 @@ export default class SmoothyApi {
     }
 
     async parseTemplate(
-        application_slug: string, service_id: string, template: Template, variables: Variables, environment: Variables
-    ): Promise<Template>
+        application_slug: string, service_id: string, template: ParsedTemplate, variables: Variables, environment: Variables
+    ): Promise<ParsedTemplate>
     {
         try {
             const response = await axios.post(`${this.host}/v1/service-templates/local/parse`, {

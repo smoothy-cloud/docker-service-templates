@@ -49,7 +49,7 @@ form:
         required: true
         immutable: true
         type: password
-        default: "{{ environment.MYSQL_ROOT_USER }}"
+        default: "{{ environment.MYSQL_ROOT_PASSWORD }}"
 
       - variable: user
         label: User

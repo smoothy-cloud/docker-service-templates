@@ -1,15 +1,12 @@
-import * as tests from 'tests'
+import { Template, utils } from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
-import 'jest-extended'
 
-const template_path = path.resolve(__dirname, '../')
+const html_template = new Template(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
-
-    expect(error).toBe(null)
+    await html_template.assertThatSyntaxIsValid()
 
 })
 
@@ -18,7 +15,7 @@ test('the template cannot be parsed without path_to_source_code', async () => {
     let thrown_error
 
     try {
-        await tests.parseTemplate('app', 'website', template_path, '1.0.0')
+        await html_template.parse('app', 'website')
     } catch (error) {
         thrown_error = error
     }
@@ -37,13 +34,11 @@ test('the template can be parsed', async () => {
         'path_to_source_code': 'src/',
     }
 
-    const template = await tests.parseTemplate('app', 'website', template_path, '1.0.0', variables)
+    const actual_template = await html_template.parse('app', 'website', variables)
 
-    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_template.yml')
 
-    expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
-    expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
-    expect(template.files).toMatchObject(expected_template.files)
+    utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
 })
 
@@ -55,11 +50,11 @@ test("the service works correctly when installed", async () => {
         'path_to_source_code': 'src/',
     }
 
-    const service = await tests.installTemplate(code_repository_path, template_path, '1.0.0', variables)
+    await html_template.install(code_repository_path, variables)
 
     try {
 
-        const host = `http://localhost:${service.entrypoints.html_service}`
+        const host = `http://localhost:${html_template.getEntrypoint('html_service')?.host_port}`
 
         await page.goto(`${host}/`)
         await expect(await page.url()).toEqual(`${host}/`)
@@ -90,7 +85,7 @@ test("the service works correctly when installed", async () => {
         await expect(await page.content()).toContain('Woops, page not found!')
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await html_template.uninstall()
     }
 
 }, 1000 * 60 * 3)

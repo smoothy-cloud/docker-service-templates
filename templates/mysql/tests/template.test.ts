@@ -1,16 +1,12 @@
-import * as tests from 'tests'
+import { Template, utils } from 'tests'
 import path from 'path'
-import 'jest-extended'
 import mysql from 'mysql2'
 
-const template_version = '1.0.0'
-const template_path = path.resolve(__dirname, '../')
+const mysql_template = new Template(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
-
-    expect(error).toBe(null)
+    await mysql_template.assertThatSyntaxIsValid()
 
 })
 
@@ -27,12 +23,11 @@ test('the template can be parsed', async () => {
         ]
     }
 
-    const template = await tests.parseTemplate('app', 'database', template_path, template_version, variables)
+    const actual_template = await mysql_template.parse('app', 'database', variables)
 
-    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_template.yml')
 
-    expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
-    expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
+    utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
 })
 
@@ -49,14 +44,14 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         ]
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables, {}, 30)
+    await mysql_template.install(null, variables, {}, 30)
 
     try {
 
         const root_pool = mysql.createPool({
             host: '127.0.0.1',
             user: 'root',
-            port: service.entrypoints['mysql'],
+            port: mysql_template.getEntrypoint('mysql')?.host_port,
             password : 'secret',
         })
 
@@ -80,7 +75,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         const user_pool = mysql.createPool({
             host: '127.0.0.1',
             user: 'johndoe',
-            port: service.entrypoints['mysql'],
+            port: mysql_template.getEntrypoint('mysql')?.host_port,
             password : 's3cr3t',
         })
 
@@ -91,7 +86,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         })
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await mysql_template.uninstall()
     }
 
 }, 1000 * 60 * 3)
@@ -109,14 +104,14 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         ]
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables, {}, 30)
+    const service = await mysql_template.install(null, variables, {}, 30)
 
     try {
 
         const root_pool = mysql.createPool({
             host: '127.0.0.1',
             user: 'root',
-            port: service.entrypoints['mysql'],
+            port: mysql_template.getEntrypoint('mysql')?.host_port,
             password : 'secret',
         })
 
@@ -140,7 +135,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         const user_pool = mysql.createPool({
             host: '127.0.0.1',
             user: 'johndoe',
-            port: service.entrypoints['mysql'],
+            port: mysql_template.getEntrypoint('mysql')?.host_port,
             password : 's3cr3t',
         })
 
@@ -151,7 +146,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         })
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await mysql_template.uninstall()
     }
 
 }, 1000 * 60 * 3)

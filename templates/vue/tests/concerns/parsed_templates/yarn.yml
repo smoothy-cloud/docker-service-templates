@@ -2,22 +2,21 @@ files:
   Dockerfile: |-
     FROM node:alpine as build-stage
 
-    RUN mkdir -p /app/src/
-    WORKDIR /app/src/
+    RUN mkdir -p /app/
+    WORKDIR /app/
 
-    COPY code-repository/src/package*.json /app/src/
-    RUN npm install --silent
+    COPY code-repository/package*.json code-repository/yarn.* /app/
+    RUN yarn install --silent
 
-    COPY code-repository/src/ /app/src/
+    COPY code-repository/ /app/
 
 
-    RUN npm run build
-    RUN npm run optimize
+    RUN yarn run build
 
-    FROM smoothy/nginx-1.18:1.0.0
+    FROM smoothy/nginx:1.19-1.0.0
 
     COPY server.conf /etc/nginx/conf.d/server.conf
-    COPY --from=build-stage /app/src/dist /usr/share/nginx/html
+    COPY --from=build-stage /app/dist /usr/share/nginx/html
   server.conf: |-
     server {
         listen 8080;

@@ -1,18 +1,14 @@
-import * as tests from 'tests'
+import { Template, utils } from 'tests'
 import path from 'path'
 import ApiError from '@/api/ApiError';
-import 'jest-extended'
 import { promisify } from 'util'
 import redis from 'redis'
 
-const template_version = '1.0.0'
-const template_path = path.resolve(__dirname, '../')
+const redis_template = new Template(path.resolve(__dirname, '../'))
 
 test('the template is valid', async () => {
 
-    const error = await tests.validateTemplate(template_path)
-
-    expect(error).toBe(null)
+    await redis_template.assertThatSyntaxIsValid()
 
 })
 
@@ -21,7 +17,7 @@ test('the template cannot be parsed without version and password', async () => {
     let thrown_error
 
     try {
-        await tests.parseTemplate('app', 'cache', template_path, template_version)
+        await redis_template.parse('app', 'cache')
     } catch (error) {
         thrown_error = error
     }
@@ -42,12 +38,11 @@ test('the template can be parsed', async () => {
         'password': 'abc123',
     }
 
-    const template = await tests.parseTemplate('app', 'cache', template_path, template_version, variables)
+    const actual_template = await redis_template.parse('app', 'cache', variables)
 
-    const expected_template = tests.parseYamlFile(__dirname+'/concerns/parsed_templates/1.0.0/template.yml')
+    const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_template.yml')
 
-    expect(template.template.deployment).toIncludeAllMembers(expected_template.template.deployment)
-    expect(template.template.interface.logs).toIncludeAllMembers(expected_template.template.interface.logs)
+    utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
 })
 
@@ -58,13 +53,13 @@ test("the redis 5 service works correctly when installed", async () => {
         'password': 'secret',
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables)
+    await redis_template.install(null, variables)
 
     try {
 
         const client = redis.createClient({
             host: '127.0.0.1',
-            port: service.entrypoints['redis'],
+            port: redis_template.getEntrypoint('redis')?.host_port,
             password: 'secret'
         })
     
@@ -79,7 +74,7 @@ test("the redis 5 service works correctly when installed", async () => {
         client.quit()
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await redis_template.uninstall()
     }
 
 }, 1000 * 60 * 3)
@@ -91,13 +86,13 @@ test("the redis 6 service works correctly when installed", async () => {
         'password': 'secret',
     }
 
-    const service = await tests.installTemplate(null, template_path, template_version, variables)
+    await redis_template.install(null, variables)
 
     try {
 
         const client = redis.createClient({
             host: '127.0.0.1',
-            port: service.entrypoints['redis'],
+            port: redis_template.getEntrypoint('redis')?.host_port,
             password: 'secret',
         })
     
@@ -112,7 +107,7 @@ test("the redis 6 service works correctly when installed", async () => {
         client.quit()
 
     } finally {
-        await tests.uninstallTemplate(service)
+        await redis_template.uninstall()
     }
 
 }, 1000 * 60 * 3)

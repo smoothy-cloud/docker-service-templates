@@ -21,7 +21,7 @@ COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/app/
 RUN {{ command }}
 {% endfor %}
 
-FROM smoothy/nginx-1.18:1.0.0
+FROM smoothy/nginx:1.19-1.0.0
 
 COPY server.conf /etc/nginx/conf.d/server.conf
 COPY --from=build-stage {{ path('/app/', variable.path_to_source_code, '/dist') }} /usr/share/nginx/html

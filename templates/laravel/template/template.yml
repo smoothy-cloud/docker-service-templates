@@ -215,14 +215,29 @@ deployment:
     loop: "{{ variable.daemons }}"
 
   - resource: container
+    name: scheduler
+    image: "{* image.laravel *}"
+    command: bash /scheduler.sh
+    volume_mounts:
+      - volume: "{* volume.laravel_data *}"
+        mount_path: /var/www/html
+    environment:
+      - map: "{{ environment }}"
+      - key: TIMEZONE
+        value: "{{ variable.timezone }}"
+    memory: 256
+    cpus: 250
+    if: "{{ variable.run_scheduler }}"
+
+  - resource: container
     name: nginx
-    image: smoothy/nginx-1.18:1.0.0
+    image: smoothy/nginx:1.19-1.0.0
     config_file_mounts:
       - config_file: "{* config_file.server_conf *}"
         mount_path: /etc/nginx/conf.d/server.conf
     volume_mounts:
       - volume: "{* volume.laravel_data *}"
-        mount_path: /usr/share/nginx/html
+        mount_path: /var/www/html
     environment:
       - key: MAX_FILE_UPLOAD
         value: "{{ variable.maximum_file_upload_size }}"
