@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
@@ -14,10 +15,25 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', fn () => view('welcome'));
-Route::get('/phpinfo', fn () => phpinfo());
-Route::get('/log', fn () => Log::error('Woops, something went wrong.'));
+Route::get('/', function() {
+    return view('welcome');
+});
+
+Route::get('/phpinfo', function () {
+    return view('phpinfo');
+});
+
+Route::get('/log', function() {
+    Log::error('Woops, something went wrong.');
+    return response('Error logged');
+});
+
 Route::get('/job', function () {
     dispatch(fn () => Log::notice('Queued job executed.'));
-    return 'job pushed';
+    return response('Job queued');
+});
+
+Route::post('/image-upload', function (Request $request) {
+    $imageUrl = $request->file('image')->store('', ['disk' => 'public']);
+    return response(url("storage/{$imageUrl}"));
 });

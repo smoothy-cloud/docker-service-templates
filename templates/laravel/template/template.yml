@@ -237,7 +237,7 @@ deployment:
         mount_path: /etc/nginx/conf.d/server.conf
     volume_mounts:
       - volume: "{* volume.laravel_data *}"
-        mount_path: /usr/share/nginx/html
+        mount_path: /var/www/html
     environment:
       - key: MAX_FILE_UPLOAD
         value: "{{ variable.maximum_file_upload_size }}"

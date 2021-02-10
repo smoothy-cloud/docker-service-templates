@@ -1,4 +1,7 @@
 import { Template, utils } from 'tests'
+import axios from 'axios'
+import fs from 'fs'
+import FormData from 'form-data'
 import path from 'path'
 import Docker from 'dockerode'
 
@@ -99,10 +102,12 @@ test("the service works correctly when installed", async () => {
         const host = `http://localhost:${laravel_template.getEntrypoint('laravel_service')?.host_port}`
 
         await assertThatHomepageCanBeVisited(host)
+        await assertThatImagesFromTheStorageFolderCanBeLoaded(host)
         await assertThatPhpinfoShowsTheExpectedConfiguration(host)
         await assertThatLogsAreWrittenToStdout(host)
         await assertThatCronJobIsExecuted()
         await assertThatQueuedJobsAreExecuted(host)
+        await assertThatFilesCanBeUploaded(host)
 
     } finally {
         await laravel_template.uninstall()
@@ -116,6 +121,13 @@ async function assertThatHomepageCanBeVisited(host: string): Promise<void>
     await page.goto(`${host}/`)
     await expect(await page.url()).toEqual(`${host}/`)
     await expect(await page.content()).toContain('Laravel')
+}
+
+async function assertThatImagesFromTheStorageFolderCanBeLoaded(host: string): Promise<void>
+{
+    const image_response = await axios.get(`${host}/storage/image.jpg`)
+
+    expect(image_response.status).toBe(200)
 }
 
 async function assertThatPhpinfoShowsTheExpectedConfiguration(host: string): Promise<void>
@@ -177,4 +189,27 @@ async function assertThatQueuedJobsAreExecuted(host: string): Promise<void>
     const logs = await daemon_container.logs({ stdout: true, stderr: true, tail: 100, follow: false })
 
     expect(logs.toString()).toContain('production.NOTICE: Queued job executed.')
+}
+
+async function assertThatFilesCanBeUploaded(host: string): Promise<void>
+{
+    const form = new FormData()
+
+    form.append('image', fs.createReadStream(path.resolve(__dirname, 'concerns/image.jpg')))
+
+    const upload_response = await axios.post(`${host}/image-upload`, form, {
+        headers: {
+            ...form.getHeaders()
+        }
+    })
+
+    expect(upload_response.status).toBe(200)
+
+    const image_url = upload_response.data
+
+    expect(image_url).toBeString()
+
+    const image_response = await axios.get(image_url)
+
+    expect(image_response.status).toBe(200)
 }

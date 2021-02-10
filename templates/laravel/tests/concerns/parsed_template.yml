@@ -83,7 +83,7 @@ files:
         listen [::]:8080 default ipv6only=on;
         server_name _;
 
-        root /usr/share/nginx/html/services/laravel/public;
+        root /var/www/html/services/laravel/public;
         index index.php index.html index.htm;
         error_page 404 /index.php;
         charset utf-8;
@@ -131,7 +131,7 @@ files:
         }
 
         location / {
-            try_files $uri $uri/ /index.php?$query_string =404;
+            try_files $uri $uri/ /index.php?$query_string;
         }
 
         location ~ /\. {
@@ -164,7 +164,7 @@ template:
             listen [::]:8080 default ipv6only=on;
             server_name _;
 
-            root /usr/share/nginx/html/services/laravel/public;
+            root /var/www/html/services/laravel/public;
             index index.php index.html index.htm;
             error_page 404 /index.php;
             charset utf-8;
@@ -212,7 +212,7 @@ template:
             }
 
             location / {
-                try_files $uri $uri/ /index.php?$query_string =404;
+                try_files $uri $uri/ /index.php?$query_string;
             }
 
             location ~ /\. {
@@ -289,7 +289,7 @@ template:
           mount_path: /etc/nginx/conf.d/server.conf
       volume_mounts:
         - volume: app_service_backend_volume_laravel_data
-          mount_path: /usr/share/nginx/html
+          mount_path: /var/www/html
       environment:
         - key: MAX_FILE_UPLOAD
           value: 25
