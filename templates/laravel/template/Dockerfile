@@ -33,7 +33,7 @@ RUN {{ command }}
 #####################################
 
 {% if variable.php_version == "7.4" %}
-FROM smoothy/php-7.4-fpm:1.0.0
+FROM smoothy/php-fpm:7.4-1.0.0
 {% endif %}
 
 # configure base image

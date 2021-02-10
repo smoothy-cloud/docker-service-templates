@@ -231,7 +231,7 @@ deployment:
 
   - resource: container
     name: nginx
-    image: smoothy/nginx-1.18:1.0.0
+    image: smoothy/nginx:1.19-1.0.0
     config_file_mounts:
       - config_file: "{* config_file.server_conf *}"
         mount_path: /etc/nginx/conf.d/server.conf

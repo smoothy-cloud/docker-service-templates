@@ -23,7 +23,7 @@ files:
     # CREATE PHP CONTAINER
     #####################################
 
-    FROM smoothy/php-7.4-fpm:1.0.0
+    FROM smoothy/php-fpm:7.4-1.0.0
 
     # configure base image
     ENV APPLICATION_ROOT /var/www/html/services/laravel/public
@@ -283,7 +283,7 @@ template:
     - resource: container
       id: app_service_backend_container_nginx
       name: nginx
-      image: smoothy/nginx-1.18:1.0.0
+      image: smoothy/nginx:1.19-1.0.0
       config_file_mounts:
         - config_file: app_service_backend_config_file_server_conf
           mount_path: /etc/nginx/conf.d/server.conf
