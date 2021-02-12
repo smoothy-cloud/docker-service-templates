@@ -57,26 +57,32 @@ files:
             deny all;
         }
     }
+
 template:
   deployment:
+
     - resource: image
-      id: app_service_website_image_vue_service
-      name: vue_service
+      id: app_service_website_image_vue
+      name: vue
       dockerfile: Dockerfile
+
     - resource: container
       name: vue
       id: app_service_website_container_vue
-      image: app_service_website_image_vue_service
+      image: app_service_website_image_vue
       environment: []
       memory: 256
       cpus: 250
+
     - resource: entrypoint
-      id: app_service_website_entrypoint_vue_service
-      name: vue_service
+      id: app_service_website_entrypoint_vue
+      name: vue
       title: Vue.js service
       container: app_service_website_container_vue
       port: 8080
+
   interface:
     logs:
+
       - title: NGINX error logs
         container: app_service_website_container_vue

@@ -1,12 +1,14 @@
 api: v1
 
 meta:
-  name: Vue.js
+  name: Vue CLI
   description: The Progressive JavaScript Framework
 
 form:
+
   - title: Source code
     questions:
+
       - variable: path_to_source_code
         label: Path to Vue.js source code
         hint: >
@@ -14,6 +16,7 @@ form:
         required: false
         type: file_path
         default: ''
+
       - variable: paths_to_shared_libraries
         label: Paths to shared libraries
         hint: >
@@ -23,8 +26,10 @@ form:
           one or more shared libraries, you should specify their paths in the Git repository here.
         required: false
         type: file_paths
+
   - title: Building configuration
     questions:
+
       - variable: package_manager
         label: Package manager
         hint: >
@@ -37,6 +42,7 @@ form:
           - label: Yarn
             value: yarn
         default: npm
+
       - variable: build_script
         label: Build script
         hint: >
@@ -51,23 +57,27 @@ form:
               value: yarn run build
 
 deployment:
+
   - resource: image
-    name: vue_service
+    name: vue
     dockerfile: Dockerfile
+
   - resource: container
     name: vue
-    image: "{* image.vue_service *}"
+    image: "{* image.vue *}"
     environment:
       - map: "{{ environment }}"
     memory: 256
     cpus: 250
+
   - resource: entrypoint
-    name: vue_service
+    name: vue
     title: Vue.js service
     container: "{* container.vue *}"
     port: 8080
 
 interface:
   logs:
+
     - title: NGINX error logs
       container: "{* container.vue *}"

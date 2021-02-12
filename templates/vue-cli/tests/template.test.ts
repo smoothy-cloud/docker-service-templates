@@ -81,19 +81,19 @@ describe("the service works correctly when installed", () => {
 
         try {
 
-            const host = `http://localhost:${vue_template.getEntrypoint('vue_service')?.host_port}`
+            const host = `http://localhost:${vue_template.getEntrypoint('vue')?.host_port}`
 
-            await page.goto(`${host}/`)
-            await expect(await page.url()).toEqual(`${host}/`)
-            await expect(await page.content()).toContain('You are viewing page: foo')
+            expect((await page.goto(`${host}/`))?.status()).toBe(200)
+            expect(page.url()).toEqual(`${host}/`)
+            expect(await page.content()).toContain('You are viewing page: foo')
 
-            await page.goto(`${host}/bar`)
-            await expect(await page.url()).toEqual(`${host}/bar`)
-            await expect(await page.content()).toContain('You are viewing page: bar')
+            expect((await page.goto(`${host}/bar`))?.status()).toBe(200)
+            expect(page.url()).toEqual(`${host}/bar`)
+            expect(await page.content()).toContain('You are viewing page: bar')
 
-            await page.goto(`${host}/baz`)
-            await expect(await page.url()).toEqual(`${host}/404`)
-            await expect(await page.content()).toContain('Oops, page not found!')
+            expect((await page.goto(`${host}/baz`))?.status()).toBe(200)
+            expect(page.url()).toEqual(`${host}/404`)
+            expect(await page.content()).toContain('Oops, page not found!')
 
         } finally {
             await vue_template.uninstall()
@@ -115,19 +115,19 @@ describe("the service works correctly when installed", () => {
 
         try {
 
-            const host = `http://localhost:${vue_template.getEntrypoint('vue_service')?.host_port}`
+            const host = `http://localhost:${vue_template.getEntrypoint('vue')?.host_port}`
 
-            await page.goto(`${host}/`)
-            await expect(await page.url()).toEqual(`${host}/`)
-            await expect(await page.content()).toContain('You are viewing page: foo')
+            expect((await page.goto(`${host}/`))?.status()).toBe(200)
+            expect(page.url()).toEqual(`${host}/`)
+            expect(await page.content()).toContain('You are viewing page: foo')
 
-            await page.goto(`${host}/bar`)
-            await expect(await page.url()).toEqual(`${host}/bar`)
-            await expect(await page.content()).toContain('You are viewing page: bar')
+            expect((await page.goto(`${host}/bar`))?.status()).toBe(200)
+            expect(page.url()).toEqual(`${host}/bar`)
+            expect(await page.content()).toContain('You are viewing page: bar')
 
-            await page.goto(`${host}/baz`)
-            await expect(await page.url()).toEqual(`${host}/404`)
-            await expect(await page.content()).toContain('Oops, page not found!')
+            expect((await page.goto(`${host}/baz`))?.status()).toBe(200)
+            expect(page.url()).toEqual(`${host}/404`)
+            expect(await page.content()).toContain('Oops, page not found!')
 
         } finally {
             await vue_template.uninstall()

@@ -55,18 +55,18 @@ files:
 template:
   deployment:
   - resource: image
-    id: app_service_website_image_html_service
-    name: html_service
+    id: app_service_website_image_html
+    name: html
     dockerfile: Dockerfile
   - resource: container
     id: app_service_website_container_html
     name: html
-    image: app_service_website_image_html_service
+    image: app_service_website_image_html
     memory: 256
     cpus: 250
   - resource: entrypoint
-    id: app_service_website_entrypoint_html_service
-    name: html_service
+    id: app_service_website_entrypoint_html
+    name: html
     title: HTML service
     container: app_service_website_container_html
     port: 8080

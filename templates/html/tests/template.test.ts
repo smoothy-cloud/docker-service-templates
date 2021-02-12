@@ -54,35 +54,35 @@ test("the service works correctly when installed", async () => {
 
     try {
 
-        const host = `http://localhost:${html_template.getEntrypoint('html_service')?.host_port}`
+        const host = `http://localhost:${html_template.getEntrypoint('html')?.host_port}`
 
-        await page.goto(`${host}/`)
-        await expect(await page.url()).toEqual(`${host}/`)
-        await expect(await page.content()).toContain('You are viewing the home page.')
+        expect((await page.goto(`${host}/`))?.status()).toBe(200)
+        expect(page.url()).toEqual(`${host}/`)
+        expect(await page.content()).toContain('You are viewing the home page.')
 
-        await page.goto(`${host}/index.html`)
-        await expect(await page.url()).toEqual(`${host}/`)
-        await expect(await page.content()).toContain('You are viewing the home page.')
+        expect((await page.goto(`${host}/index.html`))?.status()).toBe(200)
+        expect(page.url()).toEqual(`${host}/`)
+        expect(await page.content()).toContain('You are viewing the home page.')
 
-        await page.goto(`${host}/hello`)
-        await expect(await page.url()).toEqual(`${host}/hello`)
-        await expect(await page.content()).toContain('You are viewing the hello page.')
+        expect((await page.goto(`${host}/hello`))?.status()).toBe(200)
+        expect(page.url()).toEqual(`${host}/hello`)
+        expect(await page.content()).toContain('You are viewing the hello page.')
 
-        await page.goto(`${host}/hello.html`)
-        await expect(await page.url()).toEqual(`${host}/hello`)
-        await expect(await page.content()).toContain('You are viewing the hello page.')
+        expect((await page.goto(`${host}/hello.html`))?.status()).toBe(200)
+        expect(page.url()).toEqual(`${host}/hello`)
+        expect(await page.content()).toContain('You are viewing the hello page.')
 
-        await page.goto(`${host}/hello/team`)
-        await expect(await page.url()).toEqual(`${host}/hello/team`)
-        await expect(await page.content()).toContain('You are viewing the team page.')
+        expect((await page.goto(`${host}/hello/team`))?.status()).toBe(200)
+        expect(page.url()).toEqual(`${host}/hello/team`)
+        expect(await page.content()).toContain('You are viewing the team page.')
 
-        await page.goto(`${host}/hello/team.html`)
-        await expect(await page.url()).toEqual(`${host}/hello/team`)
-        await expect(await page.content()).toContain('You are viewing the team page.')
+        expect((await page.goto(`${host}/hello/team.html`))?.status()).toBe(200)
+        expect(page.url()).toEqual(`${host}/hello/team`)
+        expect(await page.content()).toContain('You are viewing the team page.')
 
-        await page.goto(`${host}/baz`)
-        await expect(await page.url()).toEqual(`${host}/baz`)
-        await expect(await page.content()).toContain('Woops, page not found!')
+        expect((await page.goto(`${host}/baz`))?.status()).toBe(404)
+        expect(page.url()).toEqual(`${host}/baz`)
+        expect(await page.content()).toContain('Woops, page not found!')
 
     } finally {
         await html_template.uninstall()

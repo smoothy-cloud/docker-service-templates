@@ -5,6 +5,7 @@ meta:
   description: An open-source relational database management system
 
 form:
+
   - title: General
     questions:
 
@@ -147,5 +148,6 @@ interface:
     MYSQL_USER: "{{ variable.user }}"
     MYSQL_PASSWORD: "{{ variable.password }}"
   logs:
+  
     - title: MySQL logs
       container: "{* container.mysql *}"

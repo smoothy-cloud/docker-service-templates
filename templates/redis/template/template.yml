@@ -5,6 +5,7 @@ meta:
   description: An open-source key-value datastore.
 
 form:
+
   - title: General
     questions:
 
@@ -94,5 +95,6 @@ interface:
     REDIS_PORT: "{{ entrypoint.redis.port }}"
     REDIS_PASSWORD: "{{ variable.password }}"
   logs:
+  
     - title: Redis logs
       container: "{* container.redis *}"

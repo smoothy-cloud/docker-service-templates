@@ -5,31 +5,37 @@ meta:
   description: Static HTML website
 
 form:
+
   - title: Source code
     questions:
+
       - variable: path_to_source_code
         label: Path to HTML source code
         hint: >
-          The directory in your Git repository that contains the source code of your service.
+          The directory in your Git repository that contains your static HTML files.
         required: true
         type: file_path
 
 deployment:
+
   - resource: image
-    name: html_service
+    name: html
     dockerfile: Dockerfile
+
   - resource: container
     name: html
-    image: "{* image.html_service *}"
+    image: "{* image.html *}"
     memory: 256
     cpus: 250
+
   - resource: entrypoint
-    name: html_service
+    name: html
     title: HTML service
     container: "{* container.html *}"
     port: 8080
 
 interface:
   logs:
+  
     - title: NGINX error logs
       container: "{* container.html *}"
