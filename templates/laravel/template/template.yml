@@ -274,6 +274,7 @@ interface:
 
     - title: Laravel service
       volume: "{* volume.laravel *}"
+      
   logs:
 
     - title: NGINX error logs
