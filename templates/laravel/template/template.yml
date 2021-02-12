@@ -5,8 +5,10 @@ meta:
   description: The PHP Framework for Web Artisans
 
 form:
+
   - title: Source code
     questions:
+
       - variable: path_to_source_code
         label: Path to Laravel source code
         hint: >
@@ -14,6 +16,7 @@ form:
         required: false
         type: file_path
         default: ''
+
       - variable: paths_to_shared_libraries
         label: Paths to shared libraries
         hint: >
@@ -23,6 +26,7 @@ form:
           one or more shared libraries, you should specify their paths in the Git repository here.
         required: false
         type: file_paths
+        
       - variable: php_version
         label: PHP version
         hint: >
@@ -32,8 +36,10 @@ form:
         options:
           - label: "7.4"
             value: "7.4"
+
   - title: Dependencies
     questions:
+
       - variable: private_composer_registries
         label: Private composer registries
         hint: >
@@ -57,6 +63,7 @@ form:
             hint: The password that will be used to authenticate with the private registry.
             type: password
             required: true
+
       - variable: system_dependencies
         label: System dependencies
         hint: >
@@ -64,38 +71,45 @@ form:
           them here. Smoothy will install the packages for you using the apt package manager.
         type: list
         options:
-          - label: "MySQL client: <code>default-mysql-client</code>"
-            value: "default-mysql-client"
-          - label: "PostgreSQL client: <code>postgresql-client</code>"
-            value: "postgresql-client"
+          - label: MySQL client (default-mysql-client)
+            value: default-mysql-client
+          - label: PostgreSQL client (postgresql-client)
+            value: postgresql-client
+
   - title: Configuration
     questions:
+
       - variable: timezone
         label: Timezone
         hint: >
           Specify the timezone that should be configured for your service.
         required: true
         type: timezone
+
       - variable: opcache_enabled
         label: OPcache
         hint: >
           PHP's OPcode caching system can drastically improve the speed of your Laravel service. Specify whether
           or not you want to enable OPcache for your service.
         type: boolean
+
       - variable: maximum_file_upload_size
         label: Maximum file upload size
         hint: >
           Specify the maximum allowed file upload size in megabytes (MB) for your service.
         type: integer
         default: 2
+
   - title: Background processing
     questions:
+
       - variable: run_scheduler
         label: Laravel scheduler
         hint: >
           Specify whether your Laravel service uses the scheduler to execute periodic tasks. Smoothy will
           configure your service to automatically run <code>php artisan schedule:run</code> every minute.
         type: boolean
+
       - variable: daemons
         label: Daemons
         hint: >
@@ -109,14 +123,17 @@ form:
             value: "php artisan horizon"
           - label: "php artisan queue:work"
             value: "php artisan queue:work"
+
   - title: Assets
     questions:
+
       - variable: build_assets
         label: Compile assets
         hint: >
           Chances are your Laravel service contains JavaScript and CSS assets that need to be compiled before they
           can be deployed. When this is the case, enable this option.
         type: boolean
+
       - variable: package_manager
         label: Package manager
         hint: >
@@ -130,6 +147,7 @@ form:
             value: yarn
         default: npm
         if: "{{ variable.build_assets }}"
+
       - variable: build_assets_script
         label: Compile assets script
         hint: >
@@ -145,6 +163,7 @@ form:
             - case: "{{ variable.package_manager == 'yarn' }}"
               value: yarn run production
         if: "{{ variable.build_assets }}"
+
       - variable: deploy_script
         label: Deploy script
         hint: >
@@ -176,7 +195,7 @@ deployment:
         loop: "{{ variable.private_composer_registries }}"
 
   - resource: volume
-    name: laravel_data
+    name: laravel
 
   - resource: config_file
     name: server_conf
@@ -186,7 +205,7 @@ deployment:
     name: laravel
     image: "{* image.laravel *}"
     volume_mounts:
-      - volume: "{* volume.laravel_data *}"
+      - volume: "{* volume.laravel *}"
         mount_path: /var/www/html
     environment:
       - map: "{{ environment }}"
@@ -204,7 +223,7 @@ deployment:
     image: "{* image.laravel *}"
     command: "{{ loop.value }}"
     volume_mounts:
-      - volume: "{* volume.laravel_data *}"
+      - volume: "{* volume.laravel *}"
         mount_path: /var/www/html
     environment:
       - map: "{{ environment }}"
@@ -219,7 +238,7 @@ deployment:
     image: "{* image.laravel *}"
     command: bash /scheduler.sh
     volume_mounts:
-      - volume: "{* volume.laravel_data *}"
+      - volume: "{* volume.laravel *}"
         mount_path: /var/www/html
     environment:
       - map: "{{ environment }}"
@@ -236,7 +255,7 @@ deployment:
       - config_file: "{* config_file.server_conf *}"
         mount_path: /etc/nginx/conf.d/server.conf
     volume_mounts:
-      - volume: "{* volume.laravel_data *}"
+      - volume: "{* volume.laravel *}"
         mount_path: /var/www/html
     environment:
       - key: MAX_FILE_UPLOAD
@@ -245,20 +264,24 @@ deployment:
     cpus: 250
 
   - resource: entrypoint
-    name: laravel_service
+    name: laravel
     title: Laravel service
     container: "{* container.nginx *}"
     port: 8080
 
 interface:
   volumes:
+
     - title: Laravel service
-      volume: "{* volume.laravel_data *}"
+      volume: "{* volume.laravel *}"
   logs:
+
     - title: NGINX error logs
       container: "{* container.nginx *}"
+
     - title: Laravel logs
       container: "{* container.laravel *}"
+
     - title: "Daemon logs: {{ loop.value }}"
       container: "{* container.daemon_{{ loop.key }} *}"
       loop: "{{ variable.daemons }}"

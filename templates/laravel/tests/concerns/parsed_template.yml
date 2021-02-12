@@ -153,8 +153,8 @@ template:
         - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
     - resource: volume
-      id: app_service_backend_volume_laravel_data
-      name: laravel_data
+      id: app_service_backend_volume_laravel
+      name: laravel
     - resource: config_file
       id: app_service_backend_config_file_server_conf
       name: server_conf
@@ -225,7 +225,7 @@ template:
       name: laravel
       image: app_service_backend_image_laravel
       volume_mounts:
-        - volume: app_service_backend_volume_laravel_data
+        - volume: app_service_backend_volume_laravel
           mount_path: /var/www/html
       environment:
         - key: APP_KEY
@@ -248,7 +248,7 @@ template:
       image: app_service_backend_image_laravel
       command: php artisan horizon
       volume_mounts:
-        - volume: app_service_backend_volume_laravel_data
+        - volume: app_service_backend_volume_laravel
           mount_path: /var/www/html
       environment:
         - key: APP_KEY
@@ -267,7 +267,7 @@ template:
       image: app_service_backend_image_laravel
       command: bash /scheduler.sh
       volume_mounts:
-        - volume: app_service_backend_volume_laravel_data
+        - volume: app_service_backend_volume_laravel
           mount_path: /var/www/html
       environment:
         - key: APP_KEY
@@ -288,7 +288,7 @@ template:
         - config_file: app_service_backend_config_file_server_conf
           mount_path: /etc/nginx/conf.d/server.conf
       volume_mounts:
-        - volume: app_service_backend_volume_laravel_data
+        - volume: app_service_backend_volume_laravel
           mount_path: /var/www/html
       environment:
         - key: MAX_FILE_UPLOAD
@@ -296,15 +296,15 @@ template:
       memory: 256
       cpus: 250
     - resource: entrypoint
-      id: app_service_backend_entrypoint_laravel_service
-      name: laravel_service
+      id: app_service_backend_entrypoint_laravel
+      name: laravel
       title: Laravel service
       container: app_service_backend_container_nginx
       port: 8080
   interface:
     volumes:
       - title: Laravel service
-        volume: app_service_backend_volume_laravel_data
+        volume: app_service_backend_volume_laravel
     logs:
       - title: NGINX error logs
         container: app_service_backend_container_nginx

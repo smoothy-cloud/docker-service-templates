@@ -99,7 +99,7 @@ test("the service works correctly when installed", async () => {
 
     try {
 
-        const host = `http://localhost:${laravel_template.getEntrypoint('laravel_service')?.host_port}`
+        const host = `http://localhost:${laravel_template.getEntrypoint('laravel')?.host_port}`
 
         await assertThatHomepageCanBeVisited(host)
         await assertThatImagesFromTheStorageFolderCanBeLoaded(host)
@@ -118,9 +118,9 @@ test("the service works correctly when installed", async () => {
 
 async function assertThatHomepageCanBeVisited(host: string): Promise<void>
 {
-    await page.goto(`${host}/`)
-    await expect(await page.url()).toEqual(`${host}/`)
-    await expect(await page.content()).toContain('Laravel')
+    expect((await page.goto(`${host}/`))?.status()).toBe(200)
+    expect(page.url()).toEqual(`${host}/`)
+    expect(await page.content()).toContain('Laravel')
 }
 
 async function assertThatImagesFromTheStorageFolderCanBeLoaded(host: string): Promise<void>
@@ -132,13 +132,13 @@ async function assertThatImagesFromTheStorageFolderCanBeLoaded(host: string): Pr
 
 async function assertThatPhpinfoShowsTheExpectedConfiguration(host: string): Promise<void>
 {
-    await page.goto(`${host}/phpinfo`)
-    await expect(await page.url()).toEqual(`${host}/phpinfo`)
+    expect((await page.goto(`${host}/phpinfo`))?.status()).toBe(200)
+    expect(page.url()).toEqual(`${host}/phpinfo`)
 
     const html = await page.evaluate(() => document.body.innerHTML)
-    await expect(html).toContain('<td class="e">post_max_size</td><td class="v">25M</td><td class="v">25M</td>')
-    await expect(html).toContain('<td class="e">upload_max_filesize</td><td class="v">25M</td><td class="v">25M</td>')
-    await expect(html).toContain('<td class="e">date.timezone</td><td class="v">Europe/Brussels</td>')
+    expect(html).toContain('<td class="e">post_max_size</td><td class="v">25M</td><td class="v">25M</td>')
+    expect(html).toContain('<td class="e">upload_max_filesize</td><td class="v">25M</td><td class="v">25M</td>')
+    expect(html).toContain('<td class="e">date.timezone</td><td class="v">Europe/Brussels</td>')
 }
 
 async function assertThatLogsAreWrittenToStdout(host: string): Promise<void>
