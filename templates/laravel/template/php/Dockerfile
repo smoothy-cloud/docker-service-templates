@@ -1,34 +1,4 @@
 #####################################
-# BUILD ASSETS
-#####################################
-
-{% if variable.build_assets %}
-FROM node:alpine as asset-stage
-
-RUN mkdir -p {{ path('/app/', variable.path_to_source_code) }}
-WORKDIR {{ path('/app/', variable.path_to_source_code) }}
-
-{% if variable.package_manager == "npm" %}
-COPY {{ path('code-repository/', variable.path_to_source_code, '/package*.json') }} {{ path('/app/', variable.path_to_source_code, '/') }}
-RUN npm config set loglevel "error" \
- && npm install
-{% elseif variable.package_manager == "yarn" %}
-COPY {{ path('code-repository/', variable.path_to_source_code, '/package*.json') }} {{ path('code-repository/', variable.path_to_source_code, '/yarn.*') }} {{ path('/app/', variable.path_to_source_code, '/') }}
-RUN yarn install
-{% endif %}
-
-COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/app/', variable.path_to_source_code, '/') }}
-
-{% for path_to_shared_library in variable.paths_to_shared_libraries %}
-COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/app/', path_to_shared_library, '/') }}
-{% endfor %}
-
-{% for command in variable.build_assets_script|trim|split('\n') %}
-RUN {{ command }}
-{% endfor %}
-{% endif %}
-
-#####################################
 # CREATE PHP CONTAINER
 #####################################
 
@@ -36,7 +6,6 @@ RUN {{ command }}
 FROM smoothy/php-fpm:7.4-1.0.0
 {% endif %}
 
-# configure base image
 ENV APPLICATION_ROOT {{ path('/var/www/html', variable.path_to_source_code, '/public') }}
 
 {% if variable.system_dependencies|length > 0 %}
@@ -56,10 +25,6 @@ COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('
 COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/var/www/html', path_to_shared_library, '/') }}
 {% endfor %}
 
-{% if variable.build_assets %}
-COPY --from=asset-stage {{ path('/app/', variable.path_to_source_code, '/public') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public') }}
-{% endif %}
-
 RUN chown -R smoothy:smoothy /var/www/html \
  && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/storage') }} \
  && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/bootstrap/cache') }}
@@ -75,5 +40,5 @@ RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }} $PRIVATE_COMPO
 
 RUN composer install --ignore-platform-reqs --no-dev --no-interaction --prefer-dist
 
-COPY --chown=smoothy:smoothy run.sh /entrypoints/run.sh
-COPY --chown=smoothy:smoothy scheduler.sh /scheduler.sh
+COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
+COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh

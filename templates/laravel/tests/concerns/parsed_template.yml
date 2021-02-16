@@ -1,5 +1,5 @@
 files:
-  Dockerfile: |-
+  nginx/Dockerfile: |-
     #####################################
     # BUILD ASSETS
     #####################################
@@ -10,8 +10,7 @@ files:
     WORKDIR /app/services/laravel/
 
     COPY code-repository/services/laravel/package*.json /app/services/laravel/
-    RUN npm config set loglevel "error" \
-     && npm install
+    RUN npm install
 
     COPY code-repository/services/laravel/ /app/services/laravel/
 
@@ -20,64 +19,18 @@ files:
     RUN npm run production
 
     #####################################
-    # CREATE PHP CONTAINER
+    # CREATE NGINX CONTAINER
     #####################################
 
-    FROM smoothy/php-fpm:7.4-1.0.0
-
-    # configure base image
-    ENV APPLICATION_ROOT /var/www/html/services/laravel/public
-
-    RUN apt-get -qq update \
-     && apt-get -qq install \
-                default-mysql-client \
-            > /dev/null \
-     && apt-get clean \
-     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-    COPY code-repository/services/laravel/ /var/www/html/services/laravel/
-
-    COPY code-repository/libraries/ui-components/  /var/www/html/libraries/ui-components/
+    FROM smoothy/nginx:1.19-1.0.0
 
     COPY --from=asset-stage /app/services/laravel/public /var/www/html/services/laravel/public
 
-    RUN chown -R smoothy:smoothy /var/www/html \
-     && chmod -R 775 /var/www/html/services/laravel/storage \
-     && chmod -R 775 /var/www/html/services/laravel/bootstrap/cache
+    COPY --chown=smoothy:smoothy nginx/server.conf /etc/nginx/conf.d/server.conf
 
-    WORKDIR /var/www/html/services/laravel/
+    RUN ln -s /var/www/html/storage/app/public /var/www/html/public/storage
 
-    ARG PRIVATE_COMPOSER_REGISTRY_URL_0
-    ARG PRIVATE_COMPOSER_REGISTRY_USERNAME_0
-    ARG PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
-    RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_0 $PRIVATE_COMPOSER_REGISTRY_USERNAME_0 $PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
-
-    RUN composer install --ignore-platform-reqs --no-dev --no-interaction --prefer-dist
-
-    COPY --chown=smoothy:smoothy run.sh /entrypoints/run.sh
-    COPY --chown=smoothy:smoothy scheduler.sh /scheduler.sh
-  run.sh: |
-    #!/bin/bash
-
-    #####################################
-    # prepare Laravel application
-    #####################################
-
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
-    php artisan migrate --force
-    rm public/storage
-    php artisan storage:link
-  scheduler.sh: |-
-    #!/bin/bash
-
-    while [ true ]
-    do
-        /usr/local/bin/php /var/www/html/services/laravel/artisan schedule:run &
-        sleep 60
-    done
-  server.conf: |-
+  nginx/server.conf: |-
     server {
         listen 8080;
         listen [::]:8080 default ipv6only=on;
@@ -139,12 +92,72 @@ files:
             deny all;
         }
     }
+  
+  php/Dockerfile: |-
+    #####################################
+    # CREATE PHP CONTAINER
+    #####################################
+
+    FROM smoothy/php-fpm:7.4-1.0.0
+
+    ENV APPLICATION_ROOT /var/www/html/services/laravel/public
+
+    RUN apt-get -qq update \
+     && apt-get -qq install \
+                default-mysql-client \
+            > /dev/null \
+     && apt-get clean \
+     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+    COPY code-repository/services/laravel/ /var/www/html/services/laravel/
+
+    COPY code-repository/libraries/ui-components/  /var/www/html/libraries/ui-components/
+
+    RUN chown -R smoothy:smoothy /var/www/html \
+     && chmod -R 775 /var/www/html/services/laravel/storage \
+     && chmod -R 775 /var/www/html/services/laravel/bootstrap/cache
+
+    WORKDIR /var/www/html/services/laravel/
+
+    ARG PRIVATE_COMPOSER_REGISTRY_URL_0
+    ARG PRIVATE_COMPOSER_REGISTRY_USERNAME_0
+    ARG PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+    RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_0 $PRIVATE_COMPOSER_REGISTRY_USERNAME_0 $PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+
+    RUN composer install --ignore-platform-reqs --no-dev --no-interaction --prefer-dist
+
+    COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
+    COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh
+
+  php/run.sh: |
+    #!/bin/bash
+
+    #####################################
+    # prepare Laravel application
+    #####################################
+
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan migrate --force
+    rm -f public/storage
+    php artisan storage:link
+  
+  php/scheduler.sh: |-
+    #!/bin/bash
+
+    while [ true ]
+    do
+        php /var/www/html/services/laravel/artisan schedule:run &
+        sleep 60
+    done
+  
 template:
   deployment:
     - resource: image
       id: app_service_backend_image_laravel
       name: laravel
-      dockerfile: Dockerfile
+      dockerfile: php/Dockerfile
       arguments:
         - key: PRIVATE_COMPOSER_REGISTRY_URL_0
           value: private.packagist.com
@@ -152,81 +165,20 @@ template:
           value: john.doe@example.com
         - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
+    - resource: image
+      id: app_service_backend_image_nginx
+      name: nginx
+      dockerfile: nginx/Dockerfile
     - resource: volume
-      id: app_service_backend_volume_laravel
-      name: laravel
-    - resource: config_file
-      id: app_service_backend_config_file_server_conf
-      name: server_conf
-      contents: |-
-        server {
-            listen 8080;
-            listen [::]:8080 default ipv6only=on;
-            server_name _;
-
-            root /var/www/html/services/laravel/public;
-            index index.php index.html index.htm;
-            error_page 404 /index.php;
-            charset utf-8;
-
-            add_header X-Frame-Options "sameorigin";
-            add_header X-XSS-Protection "1; mode=block";
-            add_header X-Content-Type-Options "nosniff";
-
-            location = /favicon.ico {
-                log_not_found off;
-            }
-
-            location = /robots.txt  {
-                log_not_found off;
-            }
-
-            location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
-              expires 1M;
-              add_header Cache-Control public;
-              add_header Pragma public;
-              add_header Vary Accept-Encoding;
-            }
-
-            location ~ \.php$ {
-
-                root /var/www/html/services/laravel/public;
-
-                # Defines a regular expression that captures two values. The first becomes the
-                # value of the $fastcgi_script_name variable, the second becomes the value of
-                # the $fastcgi_path_info variable.
-                fastcgi_split_path_info ^(.+\.php)(/.+)$;
-
-                # Sets the address of a FastCGI server. The address can be specified as a
-                # domain name or IP address, and a port, or as a UNIX-domain socket path.
-                fastcgi_pass app_service_backend_container_laravel:9000;
-
-                # Sets a file name that will be appended after a URI that ends with a slash,
-                # in the value of the $fastcgi_script_name variable.
-                fastcgi_index index.php;
-
-                include /etc/nginx/fastcgi_params;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                fastcgi_param PATH_INFO $fastcgi_path_info;
-
-            }
-
-            location / {
-                try_files $uri $uri/ /index.php?$query_string;
-            }
-
-            location ~ /\. {
-                log_not_found off;
-                deny all;
-            }
-        }
+      id: app_service_backend_volume_storage
+      name: storage
     - resource: container
       id: app_service_backend_container_laravel
       name: laravel
       image: app_service_backend_image_laravel
       volume_mounts:
-        - volume: app_service_backend_volume_laravel
-          mount_path: /var/www/html
+        - volume: app_service_backend_volume_storage
+          mount_path: /var/www/html/storage
       environment:
         - key: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
@@ -248,8 +200,8 @@ template:
       image: app_service_backend_image_laravel
       command: php artisan horizon
       volume_mounts:
-        - volume: app_service_backend_volume_laravel
-          mount_path: /var/www/html
+        - volume: app_service_backend_volume_storage
+          mount_path: /var/www/html/storage
       environment:
         - key: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
@@ -267,8 +219,8 @@ template:
       image: app_service_backend_image_laravel
       command: bash /scheduler.sh
       volume_mounts:
-        - volume: app_service_backend_volume_laravel
-          mount_path: /var/www/html
+        - volume: app_service_backend_volume_storage
+          mount_path: /var/www/html/storage
       environment:
         - key: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
@@ -283,13 +235,10 @@ template:
     - resource: container
       id: app_service_backend_container_nginx
       name: nginx
-      image: smoothy/nginx:1.19-1.0.0
-      config_file_mounts:
-        - config_file: app_service_backend_config_file_server_conf
-          mount_path: /etc/nginx/conf.d/server.conf
+      image: app_service_backend_image_nginx
       volume_mounts:
-        - volume: app_service_backend_volume_laravel
-          mount_path: /var/www/html
+        - volume: app_service_backend_volume_storage
+          mount_path: /var/www/html/storage
       environment:
         - key: MAX_FILE_UPLOAD
           value: 25
@@ -303,8 +252,8 @@ template:
       port: 8080
   interface:
     volumes:
-      - title: Laravel service
-        volume: app_service_backend_volume_laravel
+      - title: Storage
+        volume: app_service_backend_volume_storage
     logs:
       - title: NGINX error logs
         container: app_service_backend_container_nginx

@@ -182,7 +182,7 @@ deployment:
 
   - resource: image
     name: laravel
-    dockerfile: Dockerfile
+    dockerfile: php/Dockerfile
     arguments:
       - key: PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }}
         value: "{{ loop.value.url }}"
@@ -194,19 +194,19 @@ deployment:
         value: "{{ loop.value.password }}"
         loop: "{{ variable.private_composer_registries }}"
 
-  - resource: volume
-    name: laravel
+  - resource: image
+    name: nginx
+    dockerfile: nginx/Dockerfile
 
-  - resource: config_file
-    name: server_conf
-    source: server.conf
+  - resource: volume
+    name: storage
 
   - resource: container
     name: laravel
     image: "{* image.laravel *}"
     volume_mounts:
-      - volume: "{* volume.laravel *}"
-        mount_path: /var/www/html
+      - volume: "{* volume.storage *}"
+        mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
       - key: TIMEZONE
@@ -223,8 +223,8 @@ deployment:
     image: "{* image.laravel *}"
     command: "{{ loop.value }}"
     volume_mounts:
-      - volume: "{* volume.laravel *}"
-        mount_path: /var/www/html
+      - volume: "{* volume.storage *}"
+        mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
       - key: TIMEZONE
@@ -238,8 +238,8 @@ deployment:
     image: "{* image.laravel *}"
     command: bash /scheduler.sh
     volume_mounts:
-      - volume: "{* volume.laravel *}"
-        mount_path: /var/www/html
+      - volume: "{* volume.storage *}"
+        mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
       - key: TIMEZONE
@@ -250,13 +250,10 @@ deployment:
 
   - resource: container
     name: nginx
-    image: smoothy/nginx:1.19-1.0.0
-    config_file_mounts:
-      - config_file: "{* config_file.server_conf *}"
-        mount_path: /etc/nginx/conf.d/server.conf
+    image: "{* image.nginx *}"
     volume_mounts:
-      - volume: "{* volume.laravel *}"
-        mount_path: /var/www/html
+      - volume: "{* volume.storage *}"
+        mount_path: /var/www/html/storage
     environment:
       - key: MAX_FILE_UPLOAD
         value: "{{ variable.maximum_file_upload_size }}"
@@ -272,8 +269,8 @@ deployment:
 interface:
   volumes:
 
-    - title: Laravel service
-      volume: "{* volume.laravel *}"
+    - title: Storage
+      volume: "{* volume.storage *}"
       
   logs:
 

@@ -42,7 +42,7 @@ test('the template can be parsed', async () => {
         'build_assets': true,
         'package_manager': 'npm',
         'build_assets_script': 'npm run production',
-        'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nphp artisan migrate --force\nrm public/storage\nphp artisan storage:link'
+        'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nphp artisan migrate --force\nrm -f public/storage\nphp artisan storage:link'
     }
 
     const environment = {
