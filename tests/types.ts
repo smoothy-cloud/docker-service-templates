@@ -21,7 +21,7 @@ export type TemplateFiles = Record<string, string>
 
 export type Variables = Record<string, any>
 
-export type Resource = Image | Volume | ConfigFile | Container | Entrypoint
+export type Resource = Image | Volume | ConfigFile | Container | Job | Entrypoint
 
 export interface Interface {
     logs?: LogInterface[]
@@ -90,6 +90,17 @@ export interface Container {
     name: string;
     id: string;
     resource: "container";
+    image: string;
+    command?: CommandPart[];
+    environment?: EnvironmentVariable[];
+    volume_mounts?: VolumeMount[];
+    config_file_mounts?: ConfigFileMount[];
+}
+
+export interface Job {
+    name: string;
+    id: string;
+    resource: "job";
     image: string;
     command?: CommandPart[];
     environment?: EnvironmentVariable[];

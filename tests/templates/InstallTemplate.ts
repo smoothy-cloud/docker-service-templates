@@ -5,6 +5,7 @@ import UninstallTemplate from '@/templates/UninstallTemplate'
 import BuildImage from '@/docker/BuildImage'
 import CreateNetwork from '@/docker/CreateNetwork'
 import CreateVolume from '@/docker/CreateVolume'
+import RunJob from '@/docker/RunJob'
 import RunContainer from '@/docker/RunContainer'
 import { Volume, Image, Entrypoint, ConfigFile, ParsedTemplate, Variables } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
@@ -37,6 +38,7 @@ export class InstallTemplate
             await this.createVolumes(template)
             await this.createConfigFiles(template)
             await this.runContainers(template)
+            await this.runJobs(template)
         } catch (error) {
             (new UninstallTemplate).execute(template)
             throw error
@@ -122,6 +124,17 @@ export class InstallTemplate
             if(resource.resource !== 'container') continue
 
             await new RunContainer().execute(this.directory, resource, entrypoints)
+
+        }
+    }
+
+    async runJobs(template: ParsedTemplate): Promise<void>
+    {
+        for(const resource of template.template.deployment) {
+
+            if(resource.resource !== 'job') continue
+
+            await new RunJob().execute(this.directory, resource)
 
         }
     }

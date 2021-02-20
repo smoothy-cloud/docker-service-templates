@@ -4,16 +4,33 @@
 import DeleteImage from '@/docker/DeleteImage'
 import DeleteVolume from '@/docker/DeleteVolume'
 import DeleteContainer from '@/docker/DeleteContainer'
+import DeleteJob from '@/docker/DeleteJob'
 import { ParsedTemplate } from '@/types'
 
 export class UninstallTemplate
 {
     async execute(template: ParsedTemplate): Promise<void>
     {
+        await this.deleteJobs(template)
         await this.deleteContainers(template)
         // await this.deleteConfigFiles(template)
         await this.deleteVolumes(template)
         await this.deleteImages(template)
+    }
+
+    async deleteJobs(template: ParsedTemplate): Promise<void>
+    {
+        const promises: Promise<void>[] = []
+
+        template.template.deployment.forEach(resource => {
+
+            if(resource.resource !== 'job') return
+
+            promises.push(new DeleteJob().execute(resource))
+
+        })
+
+        await Promise.all(promises)
     }
 
     async deleteContainers(template: ParsedTemplate): Promise<void>

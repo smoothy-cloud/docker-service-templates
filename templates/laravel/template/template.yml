@@ -174,9 +174,17 @@ form:
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
-          php artisan migrate --force
           rm public/storage
           php artisan storage:link
+
+      - variable: init_script
+        label: Init script
+        hint: >
+          Whenever a new release of your service is deployed, this script will be run. This makes it the
+          perfect place to run database migrations or cache your routes and configuration.
+        type: code
+        default: |
+          php artisan migrate --force
 
 deployment:
 
@@ -259,6 +267,29 @@ deployment:
         value: "{{ variable.maximum_file_upload_size }}"
     memory: 256
     cpus: 250
+
+  - resource: config_file
+    name: init
+    source: php/init.sh
+    if: "{{ variable.init_script }}"
+
+  - resource: job
+    name: init
+    image: "{* image.laravel *}"
+    command: bash /init.sh
+    config_file_mounts:
+      - config_file: "{* config_file.init *}"
+        mount_path: /init.sh
+    volume_mounts:
+      - volume: "{* volume.storage *}"
+        mount_path: /var/www/html/storage
+    environment:
+      - map: "{{ environment }}"
+      - key: TIMEZONE
+        value: "{{ variable.timezone }}"
+    memory: 256
+    cpus: 250
+    if: "{{ variable.init_script }}"
 
   - resource: entrypoint
     name: laravel

@@ -104,7 +104,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         ]
     }
 
-    const service = await mysql_template.install(null, variables, {}, 30)
+    await mysql_template.install(null, variables, {}, 30)
 
     try {
 

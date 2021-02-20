@@ -1,4 +1,5 @@
 files:
+  
   nginx/Dockerfile: |-
     #####################################
     # BUILD ASSETS
@@ -129,6 +130,16 @@ files:
     COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
     COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh
 
+  php/init.sh: |
+    #!/bin/bash
+
+    #####################################
+    # init Laravel application
+    #####################################
+
+    php artisan db:ready
+    php artisan migrate --force
+
   php/run.sh: |
     #!/bin/bash
 
@@ -139,7 +150,6 @@ files:
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
-    php artisan migrate --force
     rm -f public/storage
     php artisan storage:link
   
@@ -154,6 +164,7 @@ files:
   
 template:
   deployment:
+
     - resource: image
       id: app_service_backend_image_laravel
       name: laravel
@@ -165,13 +176,16 @@ template:
           value: john.doe@example.com
         - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
+    
     - resource: image
       id: app_service_backend_image_nginx
       name: nginx
       dockerfile: nginx/Dockerfile
+    
     - resource: volume
       id: app_service_backend_volume_storage
       name: storage
+    
     - resource: container
       id: app_service_backend_container_laravel
       name: laravel
@@ -194,6 +208,7 @@ template:
           value: true
       memory: 256
       cpus: 250
+    
     - resource: container
       id: app_service_backend_container_daemon_0
       name: daemon_0
@@ -213,6 +228,7 @@ template:
           value: Europe/Brussels
       memory: 256
       cpus: 250
+    
     - resource: container
       id: app_service_backend_container_scheduler
       name: scheduler
@@ -232,6 +248,7 @@ template:
           value: Europe/Brussels
       memory: 256
       cpus: 250
+    
     - resource: container
       id: app_service_backend_container_nginx
       name: nginx
@@ -244,12 +261,50 @@ template:
           value: 25
       memory: 256
       cpus: 250
+    
+    - resource: config_file
+      id: app_service_backend_config_file_init
+      name: init
+      contents: |
+        #!/bin/bash
+
+        #####################################
+        # init Laravel application
+        #####################################
+
+        php artisan db:ready
+        php artisan migrate --force
+
+    - resource: job
+      id: app_service_backend_job_init
+      name: init
+      image: app_service_backend_image_laravel
+      command: bash /init.sh
+      volume_mounts:
+        - volume: app_service_backend_volume_storage
+          mount_path: /var/www/html/storage
+      config_file_mounts:
+        - config_file: app_service_backend_config_file_init
+          mount_path: /init.sh
+      environment:
+        - key: APP_KEY
+          value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
+        - key: APP_ENV
+          value: production
+        - key: APP_DEBUG
+          value: false
+        - key: TIMEZONE
+          value: Europe/Brussels
+      memory: 256
+      cpus: 250
+    
     - resource: entrypoint
       id: app_service_backend_entrypoint_laravel
       name: laravel
       title: Laravel service
       container: app_service_backend_container_nginx
       port: 8080
+
   interface:
     volumes:
       - title: Storage
