@@ -1,4 +1,5 @@
 files:
+
   Dockerfile: |-
     FROM node:alpine as build-stage
 
@@ -17,6 +18,7 @@ files:
 
     COPY server.conf /etc/nginx/conf.d/server.conf
     COPY --from=build-stage /app/dist /usr/share/nginx/html
+
   server.conf: |-
     server {
         listen 8080;
@@ -58,14 +60,15 @@ files:
     }
 
 template:
+
   deployment:
 
-    - resource: image
+    - type: image
       id: app_service_website_image_vue
       name: vue
       dockerfile: Dockerfile
 
-    - resource: container
+    - type: container
       name: vue
       id: app_service_website_container_vue
       image: app_service_website_image_vue
@@ -73,15 +76,15 @@ template:
       memory: 256
       cpus: 250
 
-    - resource: entrypoint
+    - type: entrypoint
       id: app_service_website_entrypoint_vue
       name: vue
-      title: Vue.js service
+      alias: Vue.js service
       container: app_service_website_container_vue
       port: 8080
 
   interface:
-    logs:
 
-      - title: NGINX error logs
-        container: app_service_website_container_vue
+    - type: logs
+      name: NGINX
+      container: app_service_website_container_vue
