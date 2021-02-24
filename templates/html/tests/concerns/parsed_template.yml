@@ -1,9 +1,11 @@
 files:
+
   Dockerfile: |-
     FROM smoothy/nginx:1.19-1.0.0
 
     COPY server.conf /etc/nginx/conf.d/server.conf
     COPY code-repository/src /usr/share/nginx/html/src
+
   server.conf: |-
     server {
         listen 8080;
@@ -52,25 +54,32 @@ files:
             deny all;
         }
     }
+    
 template:
+
   deployment:
-  - resource: image
-    id: app_service_website_image_html
-    name: html
-    dockerfile: Dockerfile
-  - resource: container
-    id: app_service_website_container_html
-    name: html
-    image: app_service_website_image_html
-    memory: 256
-    cpus: 250
-  - resource: entrypoint
-    id: app_service_website_entrypoint_html
-    name: html
-    title: HTML service
-    container: app_service_website_container_html
-    port: 8080
+
+    - type: image
+      id: app_service_website_image_html
+      name: html
+      dockerfile: Dockerfile
+
+    - type: container
+      id: app_service_website_container_html
+      name: html
+      image: app_service_website_image_html
+      memory: 256
+      cpus: 250
+
+    - type: entrypoint
+      id: app_service_website_entrypoint_html
+      name: html
+      alias: HTML service
+      container: app_service_website_container_html
+      port: 8080
+
   interface:
-    logs:
-    - title: NGINX error logs
+
+    - type: logs
+      name: NGINX
       container: app_service_website_container_html
