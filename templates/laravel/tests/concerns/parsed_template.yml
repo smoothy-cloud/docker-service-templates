@@ -165,7 +165,7 @@ files:
 template:
   deployment:
 
-    - resource: image
+    - type: image
       id: app_service_backend_image_laravel
       name: laravel
       dockerfile: php/Dockerfile
@@ -177,16 +177,16 @@ template:
         - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
     
-    - resource: image
+    - type: image
       id: app_service_backend_image_nginx
       name: nginx
       dockerfile: nginx/Dockerfile
     
-    - resource: volume
+    - type: volume
       id: app_service_backend_volume_storage
       name: storage
     
-    - resource: container
+    - type: container
       id: app_service_backend_container_laravel
       name: laravel
       image: app_service_backend_image_laravel
@@ -209,11 +209,12 @@ template:
       memory: 256
       cpus: 250
     
-    - resource: container
+    - type: container
       id: app_service_backend_container_daemon_0
       name: daemon_0
       image: app_service_backend_image_laravel
-      command: php artisan horizon
+      command:
+        - php artisan horizon
       volume_mounts:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
@@ -229,11 +230,12 @@ template:
       memory: 256
       cpus: 250
     
-    - resource: container
+    - type: container
       id: app_service_backend_container_scheduler
       name: scheduler
       image: app_service_backend_image_laravel
-      command: bash /scheduler.sh
+      command:
+        - bash /scheduler.sh
       volume_mounts:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
@@ -249,7 +251,7 @@ template:
       memory: 256
       cpus: 250
     
-    - resource: container
+    - type: container
       id: app_service_backend_container_nginx
       name: nginx
       image: app_service_backend_image_nginx
@@ -262,7 +264,7 @@ template:
       memory: 256
       cpus: 250
     
-    - resource: config_file
+    - type: config_file
       id: app_service_backend_config_file_init
       name: init
       contents: |
@@ -275,11 +277,12 @@ template:
         php artisan db:ready
         php artisan migrate --force
 
-    - resource: job
+    - type: job
       id: app_service_backend_job_init
       name: init
       image: app_service_backend_image_laravel
-      command: bash /init.sh
+      command: 
+        - bash /init.sh
       volume_mounts:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
@@ -298,21 +301,35 @@ template:
       memory: 256
       cpus: 250
     
-    - resource: entrypoint
+    - type: entrypoint
       id: app_service_backend_entrypoint_laravel
       name: laravel
-      title: Laravel service
+      alias: Laravel service
       container: app_service_backend_container_nginx
       port: 8080
 
   interface:
-    volumes:
-      - title: Storage
-        volume: app_service_backend_volume_storage
-    logs:
-      - title: NGINX error logs
-        container: app_service_backend_container_nginx
-      - title: Laravel logs
-        container: app_service_backend_container_laravel
-      - title: 'Daemon logs: php artisan horizon'
-        container: app_service_backend_container_daemon_0
+
+    - type: files
+      name: Storage
+      volume: app_service_backend_volume_storage
+
+    - type: logs
+      name: NGINX
+      container: app_service_backend_container_nginx
+
+    - type: logs
+      name: Init script
+      job: app_service_backend_job_init
+
+    - type: logs
+      name: Laravel
+      container: app_service_backend_container_laravel
+
+    - type: logs
+      name: Scheduler
+      container: app_service_backend_container_scheduler
+
+    - type: logs
+      name: 'Daemon logs: php artisan horizon'
+      container: app_service_backend_container_daemon_0
