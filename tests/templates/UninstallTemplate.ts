@@ -24,7 +24,7 @@ export class UninstallTemplate
 
         template.template.deployment.forEach(resource => {
 
-            if(resource.resource !== 'job') return
+            if(resource.type !== 'job') return
 
             promises.push(new DeleteJob().execute(resource))
 
@@ -39,7 +39,7 @@ export class UninstallTemplate
 
         template.template.deployment.forEach(resource => {
 
-            if(resource.resource !== 'container') return
+            if(resource.type !== 'container') return
 
             promises.push(new DeleteContainer().execute(resource))
 
@@ -65,7 +65,7 @@ export class UninstallTemplate
 
         template.template.deployment.forEach(resource => {
             
-            if(resource.resource !== 'volume') return
+            if(resource.type !== 'volume') return
             
             promises.push(new DeleteVolume().execute(resource))
             
@@ -80,7 +80,7 @@ export class UninstallTemplate
 
         template.template.deployment.forEach(resource => {
             
-            if(resource.resource !== 'image') return
+            if(resource.type !== 'image') return
             
             promises.push(new DeleteImage().execute(resource))
             

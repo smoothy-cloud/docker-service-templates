@@ -54,7 +54,7 @@ class RunContainer
             }
         }
 
-        if(command && typeof command === 'string') {
+        if(command) {
             config.Cmd = command
         }
         

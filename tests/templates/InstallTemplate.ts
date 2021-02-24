@@ -54,7 +54,7 @@ export class InstallTemplate
         const images: Image[] = []
 
         for(const resource of template.template.deployment) {
-            if(resource.resource !== 'image') continue
+            if(resource.type !== 'image') continue
             images.push(resource)
         }
 
@@ -74,7 +74,7 @@ export class InstallTemplate
         const volumes: Volume[] = []
 
         for(const resource of template.template.deployment) {
-            if(resource.resource !== 'volume') continue
+            if(resource.type !== 'volume') continue
             volumes.push(resource)
         }
 
@@ -90,7 +90,7 @@ export class InstallTemplate
         const config_files: ConfigFile[] = []
 
         for(const resource of template.template.deployment) {
-            if(resource.resource !== 'config_file') continue
+            if(resource.type !== 'config_file') continue
             config_files.push(resource)
         }
 
@@ -107,7 +107,7 @@ export class InstallTemplate
 
         template.template.deployment.forEach(resource => {
 
-            if(resource.resource !== 'entrypoint') return
+            if(resource.type !== 'entrypoint') return
 
             const min_port = 50000
             const max_port = 65353
@@ -121,7 +121,7 @@ export class InstallTemplate
 
         for(const resource of template.template.deployment) {
 
-            if(resource.resource !== 'container') continue
+            if(resource.type !== 'container') continue
 
             await new RunContainer().execute(this.directory, resource, entrypoints)
 
@@ -132,7 +132,7 @@ export class InstallTemplate
     {
         for(const resource of template.template.deployment) {
 
-            if(resource.resource !== 'job') continue
+            if(resource.type !== 'job') continue
 
             await new RunJob().execute(this.directory, resource)
 

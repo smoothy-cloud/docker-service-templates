@@ -48,7 +48,7 @@ export class Template {
         if(! this.parsed_template) return null
 
         for(const resource of this.parsed_template.template.deployment) {
-            if(resource.resource !== 'container') continue
+            if(resource.type !== 'container') continue
             if(resource.name === name) return resource
         }
 
@@ -60,7 +60,7 @@ export class Template {
         if(! this.parsed_template) return null
 
         for(const resource of this.parsed_template.template.deployment) {
-            if(resource.resource !== 'entrypoint') continue
+            if(resource.type !== 'entrypoint') continue
             if(resource.name === name) return resource
         }
 

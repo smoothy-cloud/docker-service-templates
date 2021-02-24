@@ -39,6 +39,7 @@ class RunJob
             Tty: true,
             Env: environment.map(environment_variable => `${environment_variable.key}=${environment_variable.value}`),
             Image: image,
+            Cmd: command,
             HostConfig: {
                 NetworkMode: 'smoothy',
                 Binds: binds,
@@ -47,10 +48,6 @@ class RunJob
                     MaximumRetryCount: 3
                 }
             }
-        }
-
-        if(command && typeof command === 'string') {
-            config.Cmd = command
         }
         
         const docker_container: Docker.Container = await this.docker.createContainer(config)

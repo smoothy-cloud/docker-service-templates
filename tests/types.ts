@@ -49,7 +49,7 @@ export interface ParsedTemplate {
 export interface Image {
     name: string;
     id: string;
-    resource: "image";
+    type: "image";
     dockerfile: string;
     code_repository: string;
 }
@@ -57,18 +57,14 @@ export interface Image {
 export interface Volume {
     name: string;
     id: string;
-    resource: "volume";
+    type: "volume";
 }
 
 export interface ConfigFile {
     name: string;
     id: string;
-    resource: "config_file";
+    type: "config_file";
     contents: string;
-}
-
-export interface CommandPart {
-    part: string;
 }
 
 export interface EnvironmentVariable {
@@ -89,9 +85,9 @@ export interface ConfigFileMount {
 export interface Container {
     name: string;
     id: string;
-    resource: "container";
+    type: "container";
     image: string;
-    command?: CommandPart[];
+    command?: string[];
     environment?: EnvironmentVariable[];
     volume_mounts?: VolumeMount[];
     config_file_mounts?: ConfigFileMount[];
@@ -100,9 +96,9 @@ export interface Container {
 export interface Job {
     name: string;
     id: string;
-    resource: "job";
+    type: "job";
     image: string;
-    command?: CommandPart[];
+    command: string[];
     environment?: EnvironmentVariable[];
     volume_mounts?: VolumeMount[];
     config_file_mounts?: ConfigFileMount[];
@@ -111,7 +107,7 @@ export interface Job {
 export interface Entrypoint {
     name: string;
     id: string;
-    resource: "entrypoint";
+    type: "entrypoint";
     container: string;
     port: number;
     host_port?: number;
