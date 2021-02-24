@@ -6,62 +6,62 @@ meta:
 
 form:
 
-  - title: General
+  - name: General
     questions:
 
-      - variable: version
-        label: Version
-        hint: > 
+      - type: select
+        name: Version
+        description: > 
           The version of Redis datastore.
+        variable: version
         required: true
         immutable: true
-        type: select
         options:
           - value: 5
-            label: 5
+            name: 5
           - value: 6
-            label: 6
+            name: 6
         default: 6
 
-      - variable: memory
-        label: Memory
-        hint: >
+      - type: binary_number
+        name: Memory
+        description: >
           The amount of memory allocated to the Redis database.
-        type: binary_number
+        variable: memory
         minimum: 1024
         default: 2048
 
-      - variable: cpus
-        label: CPU
-        hint: >
+      - type: number
+        name: CPU
+        description: >
           The number of CPU millicores allocated to the Redis database.
-        type: number
+        variable: cpus
         default: 1000
 
-  - title: Authentication
+  - name: Authentication
     questions:
 
-      - variable: password
-        label: Password
-        hint: >
+      - type: password
+        name: Password
+        description: >
           The password of the datastore that is configured the first time that the service is 
           installed on a server.
+        variable: password
         required: true
         immutable: true
-        type: password
         default: "{{ environment.REDIS_PASSWORD }}"
 
 deployment:
 
-  - resource: volume
+  - type: volume
     name: redis_5
     if: "{{ variable.version == 5 }}"
 
-  - resource: volume
+  - type: volume
     name: redis_6
     if: "{{ variable.version == 6 }}"
 
-  - resource: container
+  - type: container
     name: redis
     image:
       switch:
@@ -82,19 +82,30 @@ deployment:
     memory: "{{ variable.memory }}"
     cpus: "{{ variable.cpus }}"
 
-  - resource: entrypoint
+  - type: entrypoint
     name: redis
-    title: Redis database
+    alias: Redis database
     container: "{* container.redis *}"
     port: 6379
 
 interface:
-  shared_variables:
-    REDIS_URL: "redis://:{{ variable.password }}@{{ entrypoint.redis.host }}:{{ entrypoint.redis.port }}"
-    REDIS_HOST: "{{ entrypoint.redis.host }}"
-    REDIS_PORT: "{{ entrypoint.redis.port }}"
-    REDIS_PASSWORD: "{{ variable.password }}"
-  logs:
-  
-    - title: Redis logs
-      container: "{* container.redis *}"
+
+  - type: shared_variable
+    key: REDIS_URL
+    value: "redis://:{{ variable.password }}@{{ entrypoint.redis.host }}:{{ entrypoint.redis.port }}"
+
+  - type: shared_variable
+    key: REDIS_HOST
+    value: "{{ entrypoint.redis.host }}"
+
+  - type: shared_variable
+    key: REDIS_PORT
+    value: "{{ entrypoint.redis.port }}"
+
+  - type: shared_variable
+    key: REDIS_PASSWORD
+    value: "{{ variable.password }}"
+
+  - type: logs
+    name: Redis logs
+    container: "{* container.redis *}"
