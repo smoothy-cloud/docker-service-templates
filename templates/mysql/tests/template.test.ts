@@ -104,7 +104,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         ]
     }
 
-    await mysql_template.install(null, variables, {}, 30)
+    await mysql_template.install(null, variables, {}, 45)
 
     try {
 
@@ -141,8 +141,8 @@ test("the mysql 8.0 service works correctly when installed", async () => {
 
         user_pool.query('SHOW DATABASES', function(error, result, fields) {
             const rows = (result as any)
-            expect(rows.find((row: any) => row.Database === 'gaming_platform')).toBeDefined()
-            expect(rows.find((row: any) => row.Database === 'platform-backups')).toBeDefined()
+            expect(rows?.find((row: any) => row.Database === 'gaming_platform')).toBeDefined()
+            expect(rows?.find((row: any) => row.Database === 'platform-backups')).toBeDefined()
         })
 
     } finally {

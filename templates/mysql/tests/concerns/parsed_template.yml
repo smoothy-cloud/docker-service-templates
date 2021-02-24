@@ -1,62 +1,79 @@
 files:
+
   initialize_mysql.sql: |
     CREATE DATABASE IF NOT EXISTS `gaming_platform`;
     GRANT ALL PRIVILEGES ON `gaming_platform`.* TO 'johndoe'@'%';
     CREATE DATABASE IF NOT EXISTS `platform-backups`;
     GRANT ALL PRIVILEGES ON `platform-backups`.* TO 'johndoe'@'%';
+    
 template:
   deployment:
 
-  - resource: volume
-    id: app_service_database_volume_mysql_8
-    name: mysql_8
+    - type: volume
+      id: app_service_database_volume_mysql_8
+      name: mysql_8
 
-  - resource: config_file
-    id: app_service_database_config_file_initialize_mysql
-    name: initialize_mysql
-    contents: |
-      CREATE DATABASE IF NOT EXISTS `gaming_platform`;
-      GRANT ALL PRIVILEGES ON `gaming_platform`.* TO 'johndoe'@'%';
-      CREATE DATABASE IF NOT EXISTS `platform-backups`;
-      GRANT ALL PRIVILEGES ON `platform-backups`.* TO 'johndoe'@'%';
+    - type: config_file
+      id: app_service_database_config_file_initialize_mysql
+      name: initialize_mysql
+      contents: |
+        CREATE DATABASE IF NOT EXISTS `gaming_platform`;
+        GRANT ALL PRIVILEGES ON `gaming_platform`.* TO 'johndoe'@'%';
+        CREATE DATABASE IF NOT EXISTS `platform-backups`;
+        GRANT ALL PRIVILEGES ON `platform-backups`.* TO 'johndoe'@'%';
 
-  - resource: container
-    id: app_service_database_container_mysql
-    name: mysql
-    image: mysql:8.0      
-    volume_mounts:
-    - volume: app_service_database_volume_mysql_8
-      mount_path: "/var/lib/mysql"
-    config_file_mounts:
-    - config_file: app_service_database_config_file_initialize_mysql
-      mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
-    environment:
-    - key: MYSQL_ROOT_PASSWORD
-      value: abc123
-    - key: MYSQL_USER
-      value: johndoe
-    - key: MYSQL_PASSWORD
-      value: s3cr3t
-    command:
-    - part: "--innodb-buffer-pool-size=1717567488"
-    - part: "--default_authentication_plugin=mysql_native_password"
-    memory: 2048
-    cpus: 1000
+    - type: container
+      id: app_service_database_container_mysql
+      name: mysql
+      image: mysql:8.0      
+      volume_mounts:
+        - volume: app_service_database_volume_mysql_8
+          mount_path: "/var/lib/mysql"
+      config_file_mounts:
+        - config_file: app_service_database_config_file_initialize_mysql
+          mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
+      environment:
+        - key: MYSQL_ROOT_PASSWORD
+          value: abc123
+        - key: MYSQL_USER
+          value: johndoe
+        - key: MYSQL_PASSWORD
+          value: s3cr3t
+      command: 
+        - --innodb-buffer-pool-size=1717567488
+        - --default_authentication_plugin=mysql_native_password
+      memory: 2048
+      cpus: 1000
 
-  - resource: entrypoint
-    id: app_service_database_entrypoint_mysql
-    name: mysql
-    title: MySQL database
-    container: app_service_database_container_mysql
-    port: 3306
+    - type: entrypoint
+      id: app_service_database_entrypoint_mysql
+      name: mysql
+      alias: MySQL database
+      container: app_service_database_container_mysql
+      port: 3306
 
   interface:
-    shared_variables:
-      MYSQL_URL: mysql://root:abc123@app_service_database_container_mysql:3306
-      MYSQL_HOST: app_service_database_container_mysql
-      MYSQL_PORT: 3306
-      MYSQL_USER: root
-      MYSQL_PASSWORD: abc123
-    logs:
-    - title: MySQL logs
+
+    - type: shared_variable
+      key: MYSQL_URL
+      value: mysql://root:abc123@app_service_database_container_mysql:3306
+
+    - type: shared_variable
+      key: MYSQL_HOST
+      value: app_service_database_container_mysql
+
+    - type: shared_variable
+      key: MYSQL_PORT
+      value: 3306
+
+    - type: shared_variable
+      key: MYSQL_USER
+      value: root
+
+    - type: shared_variable
+      key: MYSQL_PASSWORD
+      value: abc123
+
+    - type: logs
+      name: MySQL logs
       container: app_service_database_container_mysql
