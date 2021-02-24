@@ -44,7 +44,7 @@ test("the mysql 5.7 service works correctly when installed", async () => {
         ]
     }
 
-    await mysql_template.install(null, variables, {}, 30)
+    await mysql_template.install(null, variables, {}, 60)
 
     try {
 
@@ -104,7 +104,7 @@ test("the mysql 8.0 service works correctly when installed", async () => {
         ]
     }
 
-    await mysql_template.install(null, variables, {}, 45)
+    await mysql_template.install(null, variables, {}, 60)
 
     try {
 
