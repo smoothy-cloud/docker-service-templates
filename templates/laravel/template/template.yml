@@ -169,7 +169,7 @@ form:
         description: >
           Whenever a new instance of the service is deployed, this script will be run. This makes it the
           perfect place to run actions that impact only a single instance of the service. For example: 
-          caching some information or adding a symlink between two folders.
+          caching the local configuration or adding a symlink between two folders.
         variable: deploy_script
         default: |
           php artisan config:cache
