@@ -6,103 +6,103 @@ meta:
 
 form:
 
-  - title: General
+  - name: General
     questions:
 
-      - variable: version
-        label: Version
-        hint: >
+      - type: select
+        name: Version
+        description: >
           The version of the MySQL server.
+        variable: version
         required: true
         immutable: true
-        type: select
         options:
-          - label: "5.7"
+          - name: "5.7"
             value: "5.7"
-          - label: "8.0"
+          - name: "8.0"
             value: "8.0"
         default: "8.0"
 
-      - variable: memory
-        label: Memory
-        hint: >
+      - type: binary_number
+        name: Memory
+        description: >
           The amount of memory allocated to the MySQL database. MySQL is a memory intensive application as
           it caches table and index data in main memory. The more data that can be cached, the less disk I/O is
           required and the faster your queries run.
-        type: binary_number
+        variable: memory
         minimum: 1024
         default: 2048
 
-      - variable: cpus
-        label: CPU
-        hint: >
+      - type: number
+        name: CPU
+        description: >
           The number of CPU millicores allocated to the MySQL database.
-        type: number
+        variable: cpus
         default: 1000
 
-  - title: Authentication
+  - name: Authentication
     questions:
 
-      - variable: root_password
-        label: Root password
-        hint: >
+      - type: password
+        name: Root password
+        description: >
           The password for the MySQL super user who has full access to all databases.
+        variable: root_password
         required: true
         immutable: true
-        type: password
         default: "{{ environment.MYSQL_ROOT_PASSWORD }}"
 
-      - variable: user
-        label: User
-        hint: >
+      - type: string
+        name: User
+        description: >
           The user is created the first time that the service is installed on a server.
-          It is granted full access to the databases listed below. 
+          It is granted full access to the databases listed below.
+        variable: user
         required: true
         immutable: true
-        type: string
         default: "{{ environment.MYSQL_USER }}"
 
-      - variable: password
-        label: Password
-        hint: >
+      - type: password
+        name: Password
+        description: >
           The password for the user that is created the first time that the service is 
           installed on a server.
+        variable: password
         required: true
         immutable: true
-        type: password
         default: "{{ environment.MYSQL_PASSWORD }}"
 
-  - title: Databases
+  - name: Databases
     questions:
 
-      - variable: databases
-        label: Databases
-        hint: >
+      - type: structs
+        name: Databases
+        description: >
           The databases are created the first time that the service is installed on a server.
-        type: structs
+        variable: databases
         immutable: true
         questions:
-          - variable: name
-            label: Name
-            hint: The name of the database.
-            type: string
+          - type: string
+            name: Name
+            description: The name of the database.
+            variable: name
             required: true
 
 deployment:
 
-  - resource: volume
+  - type: volume
     name: mysql_5
     if: "{{ variable.version == '5.7' }}"
 
-  - resource: volume
+  - type: volume
     name: mysql_8
     if: "{{ variable.version == '8.0' }}"
 
-  - resource: config_file
+  - type: config_file
     name: initialize_mysql
     source: initialize_mysql.sql
 
-  - resource: container
+  - type: container
     name: mysql
     image:
       switch:
@@ -121,33 +121,47 @@ deployment:
       - config_file: "{* config_file.initialize_mysql *}"
         mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
     environment:
-      - key: MYSQL_ROOT_PASSWORD
+      - name: MYSQL_ROOT_PASSWORD
         value: "{{ variable.root_password }}"
-      - key: MYSQL_USER
+      - name: MYSQL_USER
         value: "{{ variable.user }}"
-      - key: MYSQL_PASSWORD
+      - name: MYSQL_PASSWORD
         value: "{{ variable.password }}"
     command:
-      - part: --innodb-buffer-pool-size={{ (variable.memory * 0.8)|round * 1024 * 1024 }}
-      - part: --default_authentication_plugin=mysql_native_password
+      - --innodb-buffer-pool-size={{ (variable.memory * 0.8)|round * 1024 * 1024 }}
+      - value: --default_authentication_plugin=mysql_native_password
         if: "{{ variable.version == '8.0' }}"
     memory: "{{ variable.memory }}"
     cpus:  "{{ variable.cpus }}"
 
-  - resource: entrypoint
+  - type: entrypoint
     name: mysql
-    title: MySQL database
+    alias: MySQL database
     container: "{* container.mysql *}"
     port: 3306
 
 interface:
-  shared_variables:
-    MYSQL_URL: "mysql://{{ variable.user }}:{{ variable.password }}@{{ entrypoint.mysql.host }}:{{ entrypoint.mysql.port }}"
-    MYSQL_HOST: "{{ entrypoint.mysql.host }}"
-    MYSQL_PORT: "{{ entrypoint.mysql.port }}"
-    MYSQL_USER: "{{ variable.user }}"
-    MYSQL_PASSWORD: "{{ variable.password }}"
-  logs:
-  
-    - title: MySQL logs
-      container: "{* container.mysql *}"
+
+  - type: shared_variable
+    name: MYSQL_URL
+    value: "mysql://{{ variable.user }}:{{ variable.password }}@{{ entrypoint.mysql.host }}:{{ entrypoint.mysql.port }}"
+
+  - type: shared_variable
+    name: MYSQL_HOST
+    value: "{{ entrypoint.mysql.host }}"
+
+  - type: shared_variable
+    name: MYSQL_PORT
+    value: "{{ entrypoint.mysql.port }}"
+
+  - type: shared_variable
+    name: MYSQL_USER
+    value: "{{ variable.user }}"
+
+  - type: shared_variable
+    name: MYSQL_PASSWORD
+    value: "{{ variable.password }}"
+
+  - type: logs
+    name: MySQL logs
+    container: "{* container.mysql *}"

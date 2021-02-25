@@ -6,6 +6,7 @@ import path from 'path'
 import Docker from 'dockerode'
 
 const laravel_template = new Template(path.resolve(__dirname, '../'))
+const mysql_template = new Template(path.resolve(__dirname, '../../mysql'))
 const redis_template = new Template(path.resolve(__dirname, '../../redis'))
 
 test('the template is valid', async () => {
@@ -42,7 +43,8 @@ test('the template can be parsed', async () => {
         'build_assets': true,
         'package_manager': 'npm',
         'build_assets_script': 'npm run production',
-        'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nphp artisan migrate --force\nrm -f public/storage\nphp artisan storage:link'
+        'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link',
+        'init_script': 'php artisan db:ready\nphp artisan migrate --force',
     }
 
     const environment = {
@@ -62,7 +64,19 @@ test('the template can be parsed', async () => {
 test("the service works correctly when installed", async () => {
 
     const code_repository_path = path.resolve(__dirname, 'concerns/application/')
-    
+
+    await mysql_template.install(null, { 
+        'version': '8.0',
+        'root_password': 'secret',
+        'user': 'johndoe',
+        'password': 's3cr3t',
+        'databases': [
+            { 'name': 'laravel-app' },
+        ]
+    })
+
+    await redis_template.install(null, { 'version': '6', 'password': 'abc123' })
+
     const variables = {
         'path_to_source_code': '',
         'paths_to_shared_libraries': [],
@@ -81,15 +95,20 @@ test("the service works correctly when installed", async () => {
         'build_assets': true,
         'package_manager': 'npm',
         'build_assets_script': 'npm run production',
-        'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan migrate --force\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link'
+        'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link',
+        'init_script': 'php artisan db:ready\nphp artisan migrate --force',
     }
-
-    await redis_template.install(null, { 'version': '6', 'password': 'abc123' })
 
     const environment = {
         'APP_KEY': 'base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=',
         'APP_ENV': 'production',
         'APP_DEBUG': false,
+        'DB_CONNECTION': 'mysql',
+        'DB_DATABASE': 'laravel-app',
+        'DB_HOST': mysql_template.getContainer('mysql')?.id,
+        'DB_PORT': 3306,
+        'DB_USERNAME': 'johndoe',
+        'DB_PASSWORD': 's3cr3t',
         'REDIS_HOST': 'host.docker.internal',
         'REDIS_PASSWORD': 'abc123',
         'REDIS_PORT': redis_template.getEntrypoint('redis')?.host_port,
@@ -111,6 +130,7 @@ test("the service works correctly when installed", async () => {
 
     } finally {
         await laravel_template.uninstall()
+        await mysql_template.uninstall()
         await redis_template.uninstall()
     }
 

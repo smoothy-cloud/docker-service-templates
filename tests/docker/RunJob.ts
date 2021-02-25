@@ -1,10 +1,8 @@
 import Docker from 'dockerode'
 import { DirResult as Directory } from 'tmp'
-import { Container, Entrypoint } from '@/types'
+import { Job } from '@/types'
 
-type PortBindings = Record<string, Object>
-
-class RunContainer
+class RunJob
 {
     docker: Docker
 
@@ -13,18 +11,18 @@ class RunContainer
         this.docker = new Docker()
     }
 
-    async execute(directory: Directory, container: Container, entrypoints: Entrypoint[])
+    async execute(directory: Directory, job: Job)
     {
         const docker_containers = await this.docker.listContainers()
-        const container_exists = docker_containers.flatMap(container => container.Names).includes(container.id)
+        const job_exists = docker_containers.flatMap(container => container.Names).includes(job.id)
 
-        if(container_exists) return
+        if(job_exists) return
 
-        const image = container.image
-        const command = container.command
-        const environment = container.environment || []
-        const volume_mounts = container.volume_mounts || []
-        const config_file_mounts = container.config_file_mounts || []
+        const image = job.image
+        const command = job.command
+        const environment = job.environment || []
+        const volume_mounts = job.volume_mounts || []
+        const config_file_mounts = job.config_file_mounts || []
 
         const binds: string[] = []
 
@@ -36,26 +34,20 @@ class RunContainer
             binds.push(`${directory.name}/${config_file_mount.config_file}:${config_file_mount.mount_path}`)
         }
 
-        const port_bindings: PortBindings = {}
-
-        entrypoints
-            .filter(entrypoint => entrypoint.container === container.id)
-            .forEach(entrypoint => port_bindings[`${entrypoint.port}/tcp`] = [ { HostPort: `${entrypoint.host_port}` } ])
-
         const config: Docker.ContainerCreateOptions = {
-            name: container.id,
+            name: job.id,
             Tty: true,
             Env: environment.map(environment_variable => `${environment_variable.name}=${environment_variable.value}`),
             Image: image,
+            Cmd: command,
             HostConfig: {
                 NetworkMode: 'smoothy',
                 Binds: binds,
-                PortBindings: port_bindings
+                RestartPolicy: {
+                    Name: 'on-failure',
+                    MaximumRetryCount: 3
+                }
             }
-        }
-
-        if(command) {
-            config.Cmd = command
         }
         
         const docker_container: Docker.Container = await this.docker.createContainer(config)
@@ -64,4 +56,4 @@ class RunContainer
     }
 }
 
-export default RunContainer
+export default RunJob

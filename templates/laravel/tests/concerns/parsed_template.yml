@@ -1,4 +1,5 @@
 files:
+  
   nginx/Dockerfile: |-
     #####################################
     # BUILD ASSETS
@@ -129,6 +130,16 @@ files:
     COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
     COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh
 
+  php/init.sh: |
+    #!/bin/bash
+
+    #####################################
+    # init Laravel application
+    #####################################
+
+    php artisan db:ready
+    php artisan migrate --force
+
   php/run.sh: |
     #!/bin/bash
 
@@ -139,7 +150,6 @@ files:
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
-    php artisan migrate --force
     rm -f public/storage
     php artisan storage:link
   
@@ -154,25 +164,29 @@ files:
   
 template:
   deployment:
-    - resource: image
+
+    - type: image
       id: app_service_backend_image_laravel
       name: laravel
       dockerfile: php/Dockerfile
       arguments:
-        - key: PRIVATE_COMPOSER_REGISTRY_URL_0
+        - name: PRIVATE_COMPOSER_REGISTRY_URL_0
           value: private.packagist.com
-        - key: PRIVATE_COMPOSER_REGISTRY_USERNAME_0
+        - name: PRIVATE_COMPOSER_REGISTRY_USERNAME_0
           value: john.doe@example.com
-        - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+        - name: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
-    - resource: image
+    
+    - type: image
       id: app_service_backend_image_nginx
       name: nginx
       dockerfile: nginx/Dockerfile
-    - resource: volume
+    
+    - type: volume
       id: app_service_backend_volume_storage
       name: storage
-    - resource: container
+    
+    - type: container
       id: app_service_backend_container_laravel
       name: laravel
       image: app_service_backend_image_laravel
@@ -180,59 +194,64 @@ template:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
-        - key: MAX_FILE_UPLOAD
+        - name: MAX_FILE_UPLOAD
           value: 25
-        - key: OPCACHE
+        - name: OPCACHE
           value: true
       memory: 256
       cpus: 250
-    - resource: container
+    
+    - type: container
       id: app_service_backend_container_daemon_0
       name: daemon_0
       image: app_service_backend_image_laravel
-      command: php artisan horizon
+      command:
+        - php artisan horizon
       volume_mounts:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
       memory: 256
       cpus: 250
-    - resource: container
+    
+    - type: container
       id: app_service_backend_container_scheduler
       name: scheduler
       image: app_service_backend_image_laravel
-      command: bash /scheduler.sh
+      command:
+        - bash /scheduler.sh
       volume_mounts:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
       memory: 256
       cpus: 250
-    - resource: container
+    
+    - type: container
       id: app_service_backend_container_nginx
       name: nginx
       image: app_service_backend_image_nginx
@@ -240,24 +259,77 @@ template:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: MAX_FILE_UPLOAD
+        - name: MAX_FILE_UPLOAD
           value: 25
       memory: 256
       cpus: 250
-    - resource: entrypoint
+    
+    - type: config_file
+      id: app_service_backend_config_file_init
+      name: init
+      contents: |
+        #!/bin/bash
+
+        #####################################
+        # init Laravel application
+        #####################################
+
+        php artisan db:ready
+        php artisan migrate --force
+
+    - type: job
+      id: app_service_backend_job_init
+      name: init
+      image: app_service_backend_image_laravel
+      command: 
+        - bash /init.sh
+      volume_mounts:
+        - volume: app_service_backend_volume_storage
+          mount_path: /var/www/html/storage
+      config_file_mounts:
+        - config_file: app_service_backend_config_file_init
+          mount_path: /init.sh
+      environment:
+        - name: APP_KEY
+          value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
+        - name: APP_ENV
+          value: production
+        - name: APP_DEBUG
+          value: false
+        - name: TIMEZONE
+          value: Europe/Brussels
+      memory: 256
+      cpus: 250
+    
+    - type: entrypoint
       id: app_service_backend_entrypoint_laravel
       name: laravel
-      title: Laravel service
+      alias: Laravel service
       container: app_service_backend_container_nginx
       port: 8080
+
   interface:
-    volumes:
-      - title: Storage
-        volume: app_service_backend_volume_storage
-    logs:
-      - title: NGINX error logs
-        container: app_service_backend_container_nginx
-      - title: Laravel logs
-        container: app_service_backend_container_laravel
-      - title: 'Daemon logs: php artisan horizon'
-        container: app_service_backend_container_daemon_0
+
+    - type: files
+      name: Storage
+      volume: app_service_backend_volume_storage
+
+    - type: logs
+      name: NGINX
+      container: app_service_backend_container_nginx
+
+    - type: logs
+      name: Init script
+      job: app_service_backend_job_init
+
+    - type: logs
+      name: Laravel
+      container: app_service_backend_container_laravel
+
+    - type: logs
+      name: Scheduler
+      container: app_service_backend_container_scheduler
+
+    - type: logs
+      name: 'Daemon logs: php artisan horizon'
+      container: app_service_backend_container_daemon_0

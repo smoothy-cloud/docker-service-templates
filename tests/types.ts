@@ -21,7 +21,7 @@ export type TemplateFiles = Record<string, string>
 
 export type Variables = Record<string, any>
 
-export type Resource = Image | Volume | ConfigFile | Container | Entrypoint
+export type Resource = Image | Volume | ConfigFile | Container | Job | Entrypoint
 
 export interface Interface {
     logs?: LogInterface[]
@@ -49,7 +49,7 @@ export interface ParsedTemplate {
 export interface Image {
     name: string;
     id: string;
-    resource: "image";
+    type: "image";
     dockerfile: string;
     code_repository: string;
 }
@@ -57,22 +57,18 @@ export interface Image {
 export interface Volume {
     name: string;
     id: string;
-    resource: "volume";
+    type: "volume";
 }
 
 export interface ConfigFile {
     name: string;
     id: string;
-    resource: "config_file";
+    type: "config_file";
     contents: string;
 }
 
-export interface CommandPart {
-    part: string;
-}
-
 export interface EnvironmentVariable {
-    key: string;
+    name: string;
     value: any;
 }
 
@@ -89,9 +85,20 @@ export interface ConfigFileMount {
 export interface Container {
     name: string;
     id: string;
-    resource: "container";
+    type: "container";
     image: string;
-    command?: CommandPart[];
+    command?: string[];
+    environment?: EnvironmentVariable[];
+    volume_mounts?: VolumeMount[];
+    config_file_mounts?: ConfigFileMount[];
+}
+
+export interface Job {
+    name: string;
+    id: string;
+    type: "job";
+    image: string;
+    command: string[];
     environment?: EnvironmentVariable[];
     volume_mounts?: VolumeMount[];
     config_file_mounts?: ConfigFileMount[];
@@ -100,7 +107,7 @@ export interface Container {
 export interface Entrypoint {
     name: string;
     id: string;
-    resource: "entrypoint";
+    type: "entrypoint";
     container: string;
     port: number;
     host_port?: number;
