@@ -4,6 +4,6 @@
 # init Laravel application
 #####################################
 
-{% for command in variable.init_script|trim|split('\n') %}
+{% for command in variable.release_script|trim|split('\n') %}
 {{ command }}
 {% endfor %}
