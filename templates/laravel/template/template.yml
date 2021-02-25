@@ -167,8 +167,9 @@ form:
       - type: code
         name: Deploy script
         description: >
-          Whenever a new release of your service is deployed, this script will be run. This makes it the
-          perfect place to run database migrations or cache your routes and configuration.
+          Whenever a new instance of the service is deployed, this script will be run. This makes it the
+          perfect place to run actions that impact only a single instance of the service. For example: 
+          caching some information or adding a symlink between two folders.
         variable: deploy_script
         default: |
           php artisan config:cache
@@ -178,12 +179,14 @@ form:
           php artisan storage:link
 
       - type: code
-        name: Init script
+        name: Release script
         description: >
-          Whenever a new release of your service is deployed, this script will be run. This makes it the
-          perfect place to run database migrations or cache your routes and configuration.
-        variable: init_script
+          Whenever a new version of the service is released, this script will be run. This makes it the
+          perfect place to run actions that impact multiple instances of the service. For example:
+          connecting to a shared database and running a migration script.
+        variable: release_script
         default: |
+          sleep 60s
           php artisan migrate --force
 
 deployment:
@@ -271,7 +274,7 @@ deployment:
   - type: config_file
     name: init
     source: php/init.sh
-    if: "{{ variable.init_script }}"
+    if: "{{ variable.release_script }}"
 
   - type: job
     name: init
@@ -289,7 +292,7 @@ deployment:
         value: "{{ variable.timezone }}"
     memory: 256
     cpus: 250
-    if: "{{ variable.init_script }}"
+    if: "{{ variable.release_script }}"
 
   - type: entrypoint
     name: laravel
@@ -310,7 +313,7 @@ interface:
   - type: logs
     name: Init script
     job: "{* job.init *}"
-    if: "{{ variable.init_script }}"
+    if: "{{ variable.release_script }}"
 
   - type: logs
     name: Laravel

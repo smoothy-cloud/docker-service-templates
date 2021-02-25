@@ -44,7 +44,7 @@ test('the template can be parsed', async () => {
         'package_manager': 'npm',
         'build_assets_script': 'npm run production',
         'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link',
-        'init_script': 'php artisan db:ready\nphp artisan migrate --force',
+        'release_script': 'php artisan db:ready\nphp artisan migrate --force',
     }
 
     const environment = {
@@ -96,7 +96,7 @@ test("the service works correctly when installed", async () => {
         'package_manager': 'npm',
         'build_assets_script': 'npm run production',
         'deploy_script': 'php artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nrm -f public/storage\nphp artisan storage:link',
-        'init_script': 'php artisan db:ready\nphp artisan migrate --force',
+        'release_script': 'sleep 60s\nphp artisan migrate --force',
     }
 
     const environment = {
