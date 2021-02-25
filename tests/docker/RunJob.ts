@@ -37,7 +37,7 @@ class RunJob
         const config: Docker.ContainerCreateOptions = {
             name: job.id,
             Tty: true,
-            Env: environment.map(environment_variable => `${environment_variable.key}=${environment_variable.value}`),
+            Env: environment.map(environment_variable => `${environment_variable.name}=${environment_variable.value}`),
             Image: image,
             Cmd: command,
             HostConfig: {

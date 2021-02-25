@@ -68,7 +68,7 @@ export interface ConfigFile {
 }
 
 export interface EnvironmentVariable {
-    key: string;
+    name: string;
     value: any;
 }
 

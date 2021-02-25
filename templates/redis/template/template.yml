@@ -77,7 +77,7 @@ deployment:
         mount_path: /bitnami/redis/data
         if: "{{ variable.version == 6 }}"
     environment:
-      - key: REDIS_PASSWORD
+      - name: REDIS_PASSWORD
         value: "{{ variable.password }}"
     memory: "{{ variable.memory }}"
     cpus: "{{ variable.cpus }}"
@@ -91,19 +91,19 @@ deployment:
 interface:
 
   - type: shared_variable
-    key: REDIS_URL
+    name: REDIS_URL
     value: "redis://:{{ variable.password }}@{{ entrypoint.redis.host }}:{{ entrypoint.redis.port }}"
 
   - type: shared_variable
-    key: REDIS_HOST
+    name: REDIS_HOST
     value: "{{ entrypoint.redis.host }}"
 
   - type: shared_variable
-    key: REDIS_PORT
+    name: REDIS_PORT
     value: "{{ entrypoint.redis.port }}"
 
   - type: shared_variable
-    key: REDIS_PASSWORD
+    name: REDIS_PASSWORD
     value: "{{ variable.password }}"
 
   - type: logs

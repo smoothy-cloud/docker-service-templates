@@ -45,7 +45,7 @@ class RunContainer
         const config: Docker.ContainerCreateOptions = {
             name: container.id,
             Tty: true,
-            Env: environment.map(environment_variable => `${environment_variable.key}=${environment_variable.value}`),
+            Env: environment.map(environment_variable => `${environment_variable.name}=${environment_variable.value}`),
             Image: image,
             HostConfig: {
                 NetworkMode: 'smoothy',

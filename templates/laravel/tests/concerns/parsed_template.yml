@@ -170,11 +170,11 @@ template:
       name: laravel
       dockerfile: php/Dockerfile
       arguments:
-        - key: PRIVATE_COMPOSER_REGISTRY_URL_0
+        - name: PRIVATE_COMPOSER_REGISTRY_URL_0
           value: private.packagist.com
-        - key: PRIVATE_COMPOSER_REGISTRY_USERNAME_0
+        - name: PRIVATE_COMPOSER_REGISTRY_USERNAME_0
           value: john.doe@example.com
-        - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
+        - name: PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
           value: secret
     
     - type: image
@@ -194,17 +194,17 @@ template:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
-        - key: MAX_FILE_UPLOAD
+        - name: MAX_FILE_UPLOAD
           value: 25
-        - key: OPCACHE
+        - name: OPCACHE
           value: true
       memory: 256
       cpus: 250
@@ -219,13 +219,13 @@ template:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
       memory: 256
       cpus: 250
@@ -240,13 +240,13 @@ template:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
       memory: 256
       cpus: 250
@@ -259,7 +259,7 @@ template:
         - volume: app_service_backend_volume_storage
           mount_path: /var/www/html/storage
       environment:
-        - key: MAX_FILE_UPLOAD
+        - name: MAX_FILE_UPLOAD
           value: 25
       memory: 256
       cpus: 250
@@ -290,13 +290,13 @@ template:
         - config_file: app_service_backend_config_file_init
           mount_path: /init.sh
       environment:
-        - key: APP_KEY
+        - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
-        - key: APP_ENV
+        - name: APP_ENV
           value: production
-        - key: APP_DEBUG
+        - name: APP_DEBUG
           value: false
-        - key: TIMEZONE
+        - name: TIMEZONE
           value: Europe/Brussels
       memory: 256
       cpus: 250

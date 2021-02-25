@@ -192,13 +192,13 @@ deployment:
     name: laravel
     dockerfile: php/Dockerfile
     arguments:
-      - key: PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }}
+      - name: PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }}
         value: "{{ loop.value.url }}"
         loop: "{{ variable.private_composer_registries }}"
-      - key: PRIVATE_COMPOSER_REGISTRY_USERNAME_{{ loop.key }}
+      - name: PRIVATE_COMPOSER_REGISTRY_USERNAME_{{ loop.key }}
         value: "{{ loop.value.username }}"
         loop: "{{ variable.private_composer_registries }}"
-      - key: PRIVATE_COMPOSER_REGISTRY_PASSWORD_{{ loop.key }}
+      - name: PRIVATE_COMPOSER_REGISTRY_PASSWORD_{{ loop.key }}
         value: "{{ loop.value.password }}"
         loop: "{{ variable.private_composer_registries }}"
 
@@ -217,11 +217,11 @@ deployment:
         mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
-      - key: TIMEZONE
+      - name: TIMEZONE
         value: "{{ variable.timezone }}"
-      - key: MAX_FILE_UPLOAD
+      - name: MAX_FILE_UPLOAD
         value: "{{ variable.maximum_file_upload_size }}"
-      - key: OPCACHE
+      - name: OPCACHE
         value: "{{ variable.opcache_enabled }}"
     memory: 256
     cpus: 250
@@ -235,7 +235,7 @@ deployment:
         mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
-      - key: TIMEZONE
+      - name: TIMEZONE
         value: "{{ variable.timezone }}"
     memory: 256
     cpus: 250
@@ -250,7 +250,7 @@ deployment:
         mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
-      - key: TIMEZONE
+      - name: TIMEZONE
         value: "{{ variable.timezone }}"
     memory: 256
     cpus: 250
@@ -263,7 +263,7 @@ deployment:
       - volume: "{* volume.storage *}"
         mount_path: /var/www/html/storage
     environment:
-      - key: MAX_FILE_UPLOAD
+      - name: MAX_FILE_UPLOAD
         value: "{{ variable.maximum_file_upload_size }}"
     memory: 256
     cpus: 250
@@ -285,7 +285,7 @@ deployment:
         mount_path: /var/www/html/storage
     environment:
       - map: "{{ environment }}"
-      - key: TIMEZONE
+      - name: TIMEZONE
         value: "{{ variable.timezone }}"
     memory: 256
     cpus: 250

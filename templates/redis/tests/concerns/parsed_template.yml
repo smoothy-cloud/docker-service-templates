@@ -14,7 +14,7 @@ template:
         - volume: app_service_cache_volume_redis_6
           mount_path: /bitnami/redis/data
       environment:
-        - key: REDIS_PASSWORD
+        - name: REDIS_PASSWORD
           value: abc123
       memory: 2048
       cpus: 1000
@@ -29,19 +29,19 @@ template:
   interface:
 
     - type: shared_variable
-      key: REDIS_URL
+      name: REDIS_URL
       value: redis://:abc123@app_service_cache_container_redis:6379
 
     - type: shared_variable
-      key: REDIS_HOST
+      name: REDIS_HOST
       value: app_service_cache_container_redis
 
     - type: shared_variable
-      key: REDIS_PORT
+      name: REDIS_PORT
       value: 6379
 
     - type: shared_variable
-      key: REDIS_PASSWORD
+      name: REDIS_PASSWORD
       value: abc123
 
     - type: logs

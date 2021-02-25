@@ -33,11 +33,11 @@ template:
         - config_file: app_service_database_config_file_initialize_mysql
           mount_path: /docker-entrypoint-initdb.d/initialize_mysql.sql
       environment:
-        - key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_ROOT_PASSWORD
           value: abc123
-        - key: MYSQL_USER
+        - name: MYSQL_USER
           value: johndoe
-        - key: MYSQL_PASSWORD
+        - name: MYSQL_PASSWORD
           value: s3cr3t
       command: 
         - --innodb-buffer-pool-size=1717567488
@@ -55,23 +55,23 @@ template:
   interface:
 
     - type: shared_variable
-      key: MYSQL_URL
+      name: MYSQL_URL
       value: mysql://root:abc123@app_service_database_container_mysql:3306
 
     - type: shared_variable
-      key: MYSQL_HOST
+      name: MYSQL_HOST
       value: app_service_database_container_mysql
 
     - type: shared_variable
-      key: MYSQL_PORT
+      name: MYSQL_PORT
       value: 3306
 
     - type: shared_variable
-      key: MYSQL_USER
+      name: MYSQL_USER
       value: root
 
     - type: shared_variable
-      key: MYSQL_PASSWORD
+      name: MYSQL_PASSWORD
       value: abc123
 
     - type: logs
