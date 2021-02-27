@@ -1,9 +1,9 @@
 #####################################
-# CREATE PHP CONTAINER
+# SET UP PHP ENVIRONMENT
 #####################################
 
 {% if variable.php_version == "7.4" %}
-FROM smoothy/php-fpm:7.4-1.0.0
+FROM smoothy/php-fpm:7.4-1.0.0 AS php-stage
 {% endif %}
 
 ENV APPLICATION_ROOT {{ path('/var/www/html', variable.path_to_source_code, '/public') }}
@@ -19,14 +19,54 @@ RUN apt-get -qq update \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 {% endif %}
 
-COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/var/www/html', variable.path_to_source_code, '/') }}
+#####################################
+# BUILD ASSETS
+#####################################
+
+{% if variable.build_assets %}
+FROM node:alpine AS assets-stage
+
+RUN mkdir -p {{ path('/app/', variable.path_to_source_code) }}
+WORKDIR {{ path('/app/', variable.path_to_source_code) }}
+
+{% if variable.package_manager == "npm" %}
+COPY {{ path('code-repository/', variable.path_to_source_code, '/package*.json') }} {{ path('/app/', variable.path_to_source_code, '/') }}
+RUN npm install
+{% elseif variable.package_manager == "yarn" %}
+COPY {{ path('code-repository/', variable.path_to_source_code, '/package*.json') }} {{ path('code-repository/', variable.path_to_source_code, '/yarn.*') }} {{ path('/app/', variable.path_to_source_code, '/') }}
+RUN yarn install
+{% endif %}
+
+COPY {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/app/', variable.path_to_source_code, '/') }}
 
 {% for path_to_shared_library in variable.paths_to_shared_libraries %}
-COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/var/www/html', path_to_shared_library, '/') }}
+COPY {{ path('code-repository/', path_to_shared_library, '/') }}  {{ path('/app/', path_to_shared_library, '/') }}
 {% endfor %}
 
-RUN chown -R smoothy:smoothy /var/www/html \
- && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/storage') }} \
+{% for command in variable.build_assets_script|trim|split('\n') %}
+RUN {{ command }}
+{% endfor %}
+{% endif %}
+
+#####################################
+# ADD PHP CODE
+#####################################
+
+FROM php-stage AS production-stage
+
+COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
+COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh
+COPY --chown=smoothy:smoothy {{ path('code-repository/', variable.path_to_source_code, '/') }} {{ path('/var/www/html', variable.path_to_source_code, '/') }}
+
+{% if variable.build_assets %}
+COPY --chown=smoothy:smoothy --from=assets-stage {{ path('/app/', variable.path_to_source_code, '/public') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public') }}
+{% endif %}
+
+{% for path_to_shared_library in variable.paths_to_shared_libraries %}
+COPY --chown=smoothy:smoothy {{ path('code-repository/', path_to_shared_library, '/') }} {{ path('/var/www/html', path_to_shared_library, '/') }}
+{% endfor %}
+
+RUN chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/storage') }} \
  && chmod -R 775 {{ path('/var/www/html/', variable.path_to_source_code, '/bootstrap/cache') }}
 
 WORKDIR {{ path('/var/www/html/', variable.path_to_source_code) }}
@@ -39,6 +79,3 @@ RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_{{ loop.key }} $PRIVATE_COMPO
 {% endfor %}
 
 RUN composer install --ignore-platform-reqs --no-dev --no-interaction --prefer-dist
-
-COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
-COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh

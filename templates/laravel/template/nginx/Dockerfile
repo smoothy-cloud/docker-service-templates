@@ -3,7 +3,7 @@
 #####################################
 
 {% if variable.build_assets %}
-FROM node:alpine as asset-stage
+FROM node:alpine as assets-stage
 
 RUN mkdir -p {{ path('/app/', variable.path_to_source_code) }}
 WORKDIR {{ path('/app/', variable.path_to_source_code) }}
@@ -34,7 +34,7 @@ RUN {{ command }}
 FROM smoothy/nginx:1.19-1.0.0
 
 {% if variable.build_assets %}
-COPY --from=asset-stage {{ path('/app/', variable.path_to_source_code, '/public') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public') }}
+COPY --from=assets-stage {{ path('/app/', variable.path_to_source_code, '/public') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public') }}
 {% endif %}
 
 COPY --chown=smoothy:smoothy nginx/server.conf /etc/nginx/conf.d/server.conf

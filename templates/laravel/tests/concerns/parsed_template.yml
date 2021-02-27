@@ -5,7 +5,7 @@ files:
     # BUILD ASSETS
     #####################################
 
-    FROM node:alpine as asset-stage
+    FROM node:alpine as assets-stage
 
     RUN mkdir -p /app/services/laravel/
     WORKDIR /app/services/laravel/
@@ -25,7 +25,7 @@ files:
 
     FROM smoothy/nginx:1.19-1.0.0
 
-    COPY --from=asset-stage /app/services/laravel/public /var/www/html/services/laravel/public
+    COPY --from=assets-stage /app/services/laravel/public /var/www/html/services/laravel/public
 
     COPY --chown=smoothy:smoothy nginx/server.conf /etc/nginx/conf.d/server.conf
 
@@ -96,10 +96,10 @@ files:
   
   php/Dockerfile: |-
     #####################################
-    # CREATE PHP CONTAINER
+    # SET UP PHP ENVIRONMENT
     #####################################
 
-    FROM smoothy/php-fpm:7.4-1.0.0
+    FROM smoothy/php-fpm:7.4-1.0.0 AS php-stage
 
     ENV APPLICATION_ROOT /var/www/html/services/laravel/public
 
@@ -110,12 +110,39 @@ files:
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-    COPY code-repository/services/laravel/ /var/www/html/services/laravel/
+    #####################################
+    # BUILD ASSETS
+    #####################################
 
-    COPY code-repository/libraries/ui-components/  /var/www/html/libraries/ui-components/
+    FROM node:alpine AS assets-stage
 
-    RUN chown -R smoothy:smoothy /var/www/html \
-     && chmod -R 775 /var/www/html/services/laravel/storage \
+    RUN mkdir -p /app/services/laravel/
+    WORKDIR /app/services/laravel/
+
+    COPY code-repository/services/laravel/package*.json /app/services/laravel/
+    RUN npm install
+
+    COPY code-repository/services/laravel/ /app/services/laravel/
+
+    COPY code-repository/libraries/ui-components/  /app/libraries/ui-components/
+
+    RUN npm run production
+
+    #####################################
+    # ADD PHP CODE
+    #####################################
+
+    FROM php-stage AS production-stage
+
+    COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
+    COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh
+    COPY --chown=smoothy:smoothy code-repository/services/laravel/ /var/www/html/services/laravel/
+
+    COPY --chown=smoothy:smoothy --from=assets-stage /app/services/laravel/public /var/www/html/services/laravel/public
+
+    COPY --chown=smoothy:smoothy code-repository/libraries/ui-components/ /var/www/html/libraries/ui-components/
+
+    RUN chmod -R 775 /var/www/html/services/laravel/storage \
      && chmod -R 775 /var/www/html/services/laravel/bootstrap/cache
 
     WORKDIR /var/www/html/services/laravel/
@@ -126,9 +153,6 @@ files:
     RUN composer config $PRIVATE_COMPOSER_REGISTRY_URL_0 $PRIVATE_COMPOSER_REGISTRY_USERNAME_0 $PRIVATE_COMPOSER_REGISTRY_PASSWORD_0
 
     RUN composer install --ignore-platform-reqs --no-dev --no-interaction --prefer-dist
-
-    COPY --chown=smoothy:smoothy php/run.sh /entrypoints/run.sh
-    COPY --chown=smoothy:smoothy php/scheduler.sh /scheduler.sh
 
   php/init.sh: |
     #!/bin/bash
