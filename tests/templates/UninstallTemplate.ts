@@ -51,7 +51,7 @@ export class UninstallTemplate
     /*
     async deleteConfigFiles(service: Service): Promise<void>
     {        
-        const folder_path = path.join(app.getPath('userData'), `services/${service_id}`)
+        const folder_path = path.join(app.getPath('userData'), `services/${service_name}`)
 
         if(! fs.existsSync(folder_path)) return
         

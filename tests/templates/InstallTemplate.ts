@@ -27,9 +27,9 @@ export class InstallTemplate
     ): Promise<ParsedTemplate>
     {
         const application_slug = uuidv4().substring(0, 8)
-        const service_id = uuidv4().substring(0, 8)
+        const service_name = uuidv4().substring(0, 8)
         const template = await (new ParseTemplate).execute(
-            application_slug, service_id, template_path, template_version, variables, environment
+            application_slug, service_name, template_path, template_version, variables, environment
         )
 
         try {

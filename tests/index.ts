@@ -18,11 +18,11 @@ export class Template {
     }
     
     async parse(
-        application_slug: string, service_id: string, variables: Variables = {}, environment: Variables = {}
+        application_slug: string, service_name: string, variables: Variables = {}, environment: Variables = {}
     ): Promise<ParsedTemplate>
     {
         return await (new ParseTemplate).execute(
-            application_slug, service_id, this.template_path, 'latest', variables, environment
+            application_slug, service_name, this.template_path, 'latest', variables, environment
         )
     }
     
