@@ -33,6 +33,8 @@ test('the template can be parsed', async () => {
         'additional_software_script': `
 apt-get install -y default-mysql-client gnupg2 certbot python3-certbot-dns-cloudflare
 
+[ -d storage ] ?? echo "storage folder exists" || echo "storage folder does not exist"
+
 echo "deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main" | tee -a /etc/apt/sources.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
 apt update

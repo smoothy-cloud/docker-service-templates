@@ -69,7 +69,7 @@ class BuildImage
         return await this.docker.buildImage(pack, {
             dockerfile: image.dockerfile,
             t: image.id,
-            buildargs: image.arguments.reduce((result: Record<string, any>, argument) => {
+            buildargs: (image?.arguments || []).reduce((result: Record<string, any>, argument) => {
                 result[argument.name] = argument.value
                 return result
             }, {})
