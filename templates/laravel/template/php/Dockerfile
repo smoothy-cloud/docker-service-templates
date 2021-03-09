@@ -11,7 +11,7 @@ ENV APPLICATION_ROOT {{ path('/var/www/html', variable.path_to_source_code, '/pu
 {% if variable.additional_software_script|length > 0 %}
 RUN apt-get update \
 {% for command in variable.additional_software_script|split('\n')|filter(command => command) %}
- && {{ command }} \
+ && ({{ command }}) \
 {% endfor %}
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
