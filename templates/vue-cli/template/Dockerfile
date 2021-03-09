@@ -1,5 +1,9 @@
 FROM node:alpine as build-stage
 
+{% for name, value in environment %}
+ARG {{ name }}
+{% endfor %}
+
 RUN mkdir -p {{ path('/app/', variable.path_to_source_code) }}
 WORKDIR {{ path('/app/', variable.path_to_source_code) }}
 

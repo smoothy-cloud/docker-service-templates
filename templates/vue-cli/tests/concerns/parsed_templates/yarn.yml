@@ -3,6 +3,7 @@ files:
   Dockerfile: |-
     FROM node:alpine as build-stage
 
+
     RUN mkdir -p /app/
     WORKDIR /app/
 
@@ -67,12 +68,12 @@ template:
       id: app_service_website_image_vue
       name: vue
       dockerfile: Dockerfile
+      arguments: []
 
     - type: container
       name: vue
       id: app_service_website_container_vue
       image: app_service_website_image_vue
-      environment: []
       memory: 256
       cpus: 250
 

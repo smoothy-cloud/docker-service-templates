@@ -46,12 +46,18 @@ export interface ParsedTemplate {
     files: TemplateFiles;
 }
 
+export interface Argument {
+    name: string;
+    value: any;
+}
+
 export interface Image {
     name: string;
     id: string;
     type: "image";
     dockerfile: string;
     code_repository: string;
+    arguments: Argument[]
 }
 
 export interface Volume {

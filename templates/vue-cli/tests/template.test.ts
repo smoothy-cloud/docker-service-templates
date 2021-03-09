@@ -38,8 +38,13 @@ describe('the template can be parsed', () => {
             'package_manager': 'npm',
             'build_script': "npm run build\nnpm run optimize"
         }
+
+        const environment = {
+            'VUE_APP_API_HOST': 'abc123',
+            'VUE_APP_STRIPE_KEY': 'xyz789',
+        }
         
-        const actual_template = await vue_template.parse('app', 'website', variables)
+        const actual_template = await vue_template.parse('app', 'website', variables, environment)
     
         const expected_template = utils.readParsedTemplateFile(__dirname+'/concerns/parsed_templates/npm.yml')
     
@@ -77,7 +82,11 @@ describe("the service works correctly when installed", () => {
             'build_script': "npm run build"
         }
 
-        await vue_template.install(code_repository_path, variables)
+        const environment = {
+            'VUE_APP_KEY': 'abc123',
+        }
+
+        await vue_template.install(code_repository_path, variables, environment)
 
         try {
 
@@ -86,6 +95,7 @@ describe("the service works correctly when installed", () => {
             expect((await page.goto(`${host}/`))?.status()).toBe(200)
             expect(page.url()).toEqual(`${host}/`)
             expect(await page.content()).toContain('You are viewing page: foo')
+            expect(await page.content()).toContain('The application key is: abc123')
 
             expect((await page.goto(`${host}/bar`))?.status()).toBe(200)
             expect(page.url()).toEqual(`${host}/bar`)
