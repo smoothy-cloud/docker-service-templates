@@ -64,17 +64,14 @@ form:
             variable: password
             required: true
 
-      - type: list
-        name: System dependencies
+      - type: code
+        name: Additional software
         description: >
-          If your Laravel service requires some specific Linux (Debian) packages to be installed, you can specify
-          them here. Smoothy will install the packages for you using the apt package manager.
-        variable: system_dependencies
-        options:
-          - name: MySQL client (default-mysql-client)
-            value: default-mysql-client
-          - name: PostgreSQL client (postgresql-client)
-            value: postgresql-client
+          If your Laravel service requires some additional Linux packages or software to be installed,
+          you can specify their installation script here. Within the script, you can use any default 
+          Linux Debian utility, including the apt package manager. Multi-line commands and comments
+          are not allowed.
+        variable: additional_software_script
 
   - name: Configuration
     questions:
