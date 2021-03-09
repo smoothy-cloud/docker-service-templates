@@ -30,9 +30,14 @@ test('the template can be parsed', async () => {
                 'password': 'secret',
             }
         ],
-        'system_dependencies': [
-            'default-mysql-client'
-        ],
+        'additional_software_script': `
+apt-get install -y default-mysql-client gnupg2 certbot python3-certbot-dns-cloudflare
+
+echo "deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main" | tee -a /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
+apt update
+apt install -y ansible        
+`,
         'timezone': 'Europe/Brussels',
         'opcache_enabled': true,
         'maximum_file_upload_size': 25,
@@ -82,9 +87,14 @@ test("the service works correctly when installed", async () => {
         'paths_to_shared_libraries': [],
         'php_version': '7.4',
         'private_composer_registries': [],
-        'system_dependencies': [
-            'default-mysql-client'
-        ],
+        'additional_software_script': `
+apt-get install -y default-mysql-client gnupg2 certbot python3-certbot-dns-cloudflare
+
+echo "deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main" | tee -a /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
+apt update
+apt install -y ansible
+`,
         'timezone': 'Europe/Brussels',
         'opcache_enabled': true,
         'maximum_file_upload_size': 25,

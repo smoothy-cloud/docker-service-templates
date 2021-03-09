@@ -8,13 +8,11 @@ FROM smoothy/php-fpm:7.4-1.0.0 AS php-stage
 
 ENV APPLICATION_ROOT {{ path('/var/www/html', variable.path_to_source_code, '/public') }}
 
-{% if variable.system_dependencies|length > 0 %}
-RUN apt-get -qq update \
- && apt-get -qq install \
-    {% for dependency in variable.system_dependencies %}
-        {{ dependency }} \
-    {% endfor %}
-    > /dev/null \
+{% if variable.additional_software_script|length > 0 %}
+RUN apt-get update \
+{% for command in variable.additional_software_script|split('\n')|filter(command => command) %}
+ && {{ command }} \
+{% endfor %}
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 {% endif %}
