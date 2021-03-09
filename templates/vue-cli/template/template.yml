@@ -61,12 +61,12 @@ deployment:
   - type: image
     name: vue
     dockerfile: Dockerfile
+    arguments:
+      - map: "{{ environment }}"
 
   - type: container
     name: vue
     image: "{* image.vue *}"
-    environment:
-      - map: "{{ environment }}"
     memory: 256
     cpus: 250
 

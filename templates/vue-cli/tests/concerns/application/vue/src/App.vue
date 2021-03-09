@@ -10,13 +10,19 @@
         <router-link to="/bar">Go to Bar</router-link>
       </li>
     </ul>
+    The application key is: {{ key }}
   </div>
 </template>
 
 <script>
-export default {
-  name: 'App',
-}
+    export default {
+        name: 'App',
+        computed: {
+            key() {
+                return process.env.VUE_APP_KEY
+            }
+        }
+    }
 </script>
 
 <style>

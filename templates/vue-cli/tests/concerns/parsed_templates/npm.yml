@@ -3,6 +3,9 @@ files:
   Dockerfile: |-
     FROM node:alpine as build-stage
 
+    ARG VUE_APP_API_HOST
+    ARG VUE_APP_STRIPE_KEY
+
     RUN mkdir -p /app/src/
     WORKDIR /app/src/
 
@@ -68,12 +71,16 @@ template:
       id: app_service_website_image_vue
       name: vue
       dockerfile: Dockerfile
+      arguments:
+        - name: VUE_APP_API_HOST
+          value: abc123
+        - name: VUE_APP_STRIPE_KEY
+          value: xyz789
 
     - type: container
       name: vue
       id: app_service_website_container_vue
       image: app_service_website_image_vue
-      environment: []
       memory: 256
       cpus: 250
 
