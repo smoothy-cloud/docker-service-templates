@@ -39,4 +39,5 @@ COPY --from=assets-stage {{ path('/app/', variable.path_to_source_code, '/public
 
 COPY --chown=smoothy:smoothy nginx/server.conf /etc/nginx/conf.d/server.conf
 
-RUN ln -s /var/www/html/storage/app/public /var/www/html/public/storage
+RUN rm -f /var/www/html/public/storage/ \
+ && ([ -d /var/www/html/storage/app/public/ ] && ln -s /var/www/html/storage/app/public/ /var/www/html/public/storage/ || true)
