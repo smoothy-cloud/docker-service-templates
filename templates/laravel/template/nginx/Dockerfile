@@ -35,9 +35,11 @@ FROM smoothy/nginx:1.19-1.0.0
 
 {% if variable.build_assets %}
 COPY --from=assets-stage {{ path('/app/', variable.path_to_source_code, '/public') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public') }}
+{% else %}
+COPY {{ path('code-repository/', variable.path_to_source_code, '/public') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public') }}
 {% endif %}
 
 COPY --chown=smoothy:smoothy nginx/server.conf /etc/nginx/conf.d/server.conf
 
-RUN rm -f /var/www/html/public/storage/ \
- && ([ -d /var/www/html/storage/app/public/ ] && ln -s /var/www/html/storage/app/public/ /var/www/html/public/storage/ || true)
+RUN rm -f {{ path('/var/www/html/', variable.path_to_source_code, '/public/storage/') }} \
+ && ([ -d {{ path('/var/www/html/', variable.path_to_source_code, '/storage/app/public/') }} ] && ln -s {{ path('/var/www/html/', variable.path_to_source_code, '/storage/app/public/') }} {{ path('/var/www/html/', variable.path_to_source_code, '/public/storage/') }} || true)
