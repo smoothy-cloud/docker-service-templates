@@ -18,7 +18,7 @@ files:
     FROM smoothy/nginx:1.19-1.0.0
 
     COPY server.conf /etc/nginx/conf.d/server.conf
-    COPY --from=build-stage /app/dist /usr/share/nginx/html
+    COPY --from=build-stage /app/dist/ /usr/share/nginx/html
 
   server.conf: |-
     server {

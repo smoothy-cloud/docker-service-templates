@@ -36,7 +36,8 @@ describe('the template can be parsed', () => {
         const variables = {
             'path_to_source_code': 'src/',
             'package_manager': 'npm',
-            'build_script': "npm run build\nnpm run optimize"
+            'build_script': "npm run build\nnpm run optimize",
+            'path_to_built_source_code': 'dist/',
         }
 
         const environment = {
@@ -57,7 +58,8 @@ describe('the template can be parsed', () => {
         const variables = {
             'path_to_source_code': '',
             'package_manager': 'yarn',
-            'build_script': "yarn run build"
+            'build_script': "yarn run build",
+            'path_to_built_source_code': 'dist/',
         }
         
         const actual_template = await vue_template.parse('app', 'website', variables)
@@ -79,7 +81,8 @@ describe("the service works correctly when installed", () => {
         const variables = {
             'path_to_source_code': 'vue/',
             'package_manager': 'npm',
-            'build_script': "npm run build"
+            'build_script': "npm run build",
+            'path_to_built_source_code': 'dist/',
         }
 
         const environment = {
@@ -109,7 +112,7 @@ describe("the service works correctly when installed", () => {
             await vue_template.uninstall()
         }
 
-    }, 1000 * 60 * 3)
+    }, 1000 * 60 * 4)
 
     test('with yarn as package manager', async () => {
         
@@ -118,7 +121,8 @@ describe("the service works correctly when installed", () => {
         const variables = {
             'path_to_source_code': '/',
             'package_manager': 'yarn',
-            'build_script': "yarn run build"
+            'build_script': "yarn run build",
+            'path_to_built_source_code': 'dist/',
         }
 
         await vue_template.install(code_repository_path, variables)
@@ -143,6 +147,6 @@ describe("the service works correctly when installed", () => {
             await vue_template.uninstall()
         }
 
-    }, 1000 * 60 * 3)
+    }, 1000 * 60 * 4)
 
 })

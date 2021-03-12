@@ -56,6 +56,14 @@ form:
             - case: "{{ variable.package_manager == 'yarn' }}"
               value: yarn run build
 
+      - name: Path to built source code
+        description: >
+          The directory in which the built source code of the service is stored by the build script.
+        variable: path_to_built_source_code
+        required: true
+        type: file_path
+        default: 'dist/'
+
 deployment:
 
   - type: image
