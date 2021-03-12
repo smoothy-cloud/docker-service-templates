@@ -319,6 +319,7 @@ interface:
   - type: logs
     name: Scheduler
     container: "{* container.scheduler *}"
+    if: "{{ variable.run_scheduler }}"
 
   - type: logs
     name: "Daemon: {{ loop.value }}"
