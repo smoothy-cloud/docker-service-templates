@@ -299,6 +299,14 @@ deployment:
 
 interface:
 
+  - type: shared_variable
+    name: LARAVEL_HOST
+    value: "{{ entrypoint.laravel.host }}"
+
+  - type: shared_variable
+    name: LARAVEL_PORT
+    value: "{{ entrypoint.laravel.port }}"
+
   - type: files
     name: Storage
     volume: "{* volume.storage *}"
