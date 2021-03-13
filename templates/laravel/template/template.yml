@@ -214,7 +214,7 @@ deployment:
     image: "{* image.laravel *}"
     volume_mounts:
       - volume: "{* volume.storage *}"
-        mount_path: /var/www/html/storage
+        mount_path: "{{ path('/var/www/html/', variable.path_to_source_code, '/storage') }}"
     environment:
       - map: "{{ environment }}"
       - name: TIMEZONE
@@ -232,7 +232,7 @@ deployment:
     command: "{{ loop.value }}"
     volume_mounts:
       - volume: "{* volume.storage *}"
-        mount_path: /var/www/html/storage
+        mount_path: "{{ path('/var/www/html/', variable.path_to_source_code, '/storage') }}"
     environment:
       - map: "{{ environment }}"
       - name: TIMEZONE
@@ -247,7 +247,7 @@ deployment:
     command: bash /scheduler.sh
     volume_mounts:
       - volume: "{* volume.storage *}"
-        mount_path: /var/www/html/storage
+        mount_path: "{{ path('/var/www/html/', variable.path_to_source_code, '/storage') }}"
     environment:
       - map: "{{ environment }}"
       - name: TIMEZONE
@@ -261,7 +261,7 @@ deployment:
     image: "{* image.nginx *}"
     volume_mounts:
       - volume: "{* volume.storage *}"
-        mount_path: /var/www/html/storage
+        mount_path: "{{ path('/var/www/html/', variable.path_to_source_code, '/storage') }}"
     environment:
       - name: MAX_FILE_UPLOAD
         value: "{{ variable.maximum_file_upload_size }}"
@@ -282,7 +282,7 @@ deployment:
         mount_path: /init.sh
     volume_mounts:
       - volume: "{* volume.storage *}"
-        mount_path: /var/www/html/storage
+        mount_path: "{{ path('/var/www/html/', variable.path_to_source_code, '/storage') }}"
     environment:
       - map: "{{ environment }}"
       - name: TIMEZONE

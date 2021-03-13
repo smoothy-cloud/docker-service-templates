@@ -66,7 +66,7 @@ apt install -y ansible
 
     utils.assertThatTemplatesAreEqual(actual_template, expected_template)
 
-})
+}, 1000 * 15)
 
 test("the service works correctly when installed", async () => {
 

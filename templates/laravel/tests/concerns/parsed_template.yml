@@ -29,8 +29,8 @@ files:
 
     COPY --chown=smoothy:smoothy nginx/server.conf /etc/nginx/conf.d/server.conf
 
-    RUN rm -f /var/www/html/public/storage/ \
-     && ([ -d /var/www/html/storage/app/public/ ] && ln -s /var/www/html/storage/app/public/ /var/www/html/public/storage/ || true)
+    RUN rm -f /var/www/html/services/laravel/public/storage/ \
+     && ([ -d /var/www/html/services/laravel/storage/app/public/ ] && ln -s /var/www/html/services/laravel/storage/app/public/ /var/www/html/services/laravel/public/storage/ || true)
 
   nginx/server.conf: |-
     server {
@@ -220,7 +220,7 @@ template:
       image: app_service_backend_image_laravel
       volume_mounts:
         - volume: app_service_backend_volume_storage
-          mount_path: /var/www/html/storage
+          mount_path: /var/www/html/services/laravel/storage
       environment:
         - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
@@ -245,7 +245,7 @@ template:
         - php artisan horizon
       volume_mounts:
         - volume: app_service_backend_volume_storage
-          mount_path: /var/www/html/storage
+          mount_path: /var/www/html/services/laravel/storage
       environment:
         - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
@@ -266,7 +266,7 @@ template:
         - bash /scheduler.sh
       volume_mounts:
         - volume: app_service_backend_volume_storage
-          mount_path: /var/www/html/storage
+          mount_path: /var/www/html/services/laravel/storage
       environment:
         - name: APP_KEY
           value: base64:c3SzeMQZZHPT+eLQH6BnpDhw/uKH2N5zgM2x2a8qpcA=
@@ -285,7 +285,7 @@ template:
       image: app_service_backend_image_nginx
       volume_mounts:
         - volume: app_service_backend_volume_storage
-          mount_path: /var/www/html/storage
+          mount_path: /var/www/html/services/laravel/storage
       environment:
         - name: MAX_FILE_UPLOAD
           value: 25
@@ -313,7 +313,7 @@ template:
         - bash /init.sh
       volume_mounts:
         - volume: app_service_backend_volume_storage
-          mount_path: /var/www/html/storage
+          mount_path: /var/www/html/services/laravel/storage
       config_file_mounts:
         - config_file: app_service_backend_config_file_init
           mount_path: /init.sh
